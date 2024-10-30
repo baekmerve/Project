@@ -59,23 +59,20 @@ public class PostController {
     /**
      * 게시글 내용 수정을 위해 수정 페이지에서 보여줄 내용을 반환하는 기능
      * @param postId 수정할 게시글의 postId
-     * @param requestBody Map<String, String> 형태이며, 반드시 logined_username를 담고 있어야 함
      * @author 연상훈
      * @created 2024-10-27 오후 1:57
      * @info 그냥 post 객체를 반환하면 안 되니까 PostSimpleDTO를 반환
      */
-    @GetMapping("/{postId}/update")
+    @GetMapping("/{postId}/update/{username}")
     public PostSimpleDTO goUpdatePost(
         @PathVariable("postId") Integer postId,
-        @RequestBody Map<String, String> requestBody
+        @PathVariable("username") String username
     ) {
         log.info("goUpdatePost");
 
-        String logined_username = requestBody.get("logined_username");
+        log.info("[class] PostController - [method] deletePost - id : {} | username : {}", postId, username);
 
-        log.info("[class] PostController - [method] deletePost - id : {} | username : {}", postId, logined_username);
-
-        return postService.goUpdatePost(postId, logined_username);
+        return postService.goUpdatePost(postId, username);
     }
 
     /**
