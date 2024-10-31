@@ -21,7 +21,8 @@ public class AuctionBaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long del_id;
 
-    private LocalDate del_date; //거래일자
+    @Column(name="del_date")
+    private LocalDate delDate; //거래일자
 
     private String large; //대분류
 

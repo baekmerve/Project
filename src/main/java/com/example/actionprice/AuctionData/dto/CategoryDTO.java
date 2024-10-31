@@ -7,9 +7,12 @@ import java.util.List;
 
 @Getter
 @Builder
-public class MiddleCategoryDTO {
+public class CategoryDTO {
 
     private String large;
-    private List<String> middleCategories;
+    private String middle;
+    private String small;
+    private List<String> list;
+
 
 }

@@ -2,6 +2,7 @@ package com.example.actionprice.customerService.post.dto;
 
 import com.example.actionprice.customerService.comment.Comment;
 import com.example.actionprice.customerService.post.Post;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -45,7 +46,8 @@ public class PostListDTO {
    * @created 2024-10-27 오후 1:05
    */
   public PostListDTO(Page<Post> postPages, String keyword) {
-    this.postList = postPages.getContent()
+    boolean hasContent = postPages.hasContent();
+    this.postList = hasContent ? postPages.getContent()
         .stream()
         .map(post -> {
           Set<Comment> commentSet = post.getCommentSet();
@@ -60,7 +62,7 @@ public class PostListDTO {
             .commentSize(commentSize)
             .build();
         })
-        .toList();
+        .toList() : new ArrayList<PostSimpleDTO>();
 
     this.currentPageNum = postPages.getNumber() + 1; // Page 객체는 첫 페이지가 0부터 시작함. 1부터 시작하려면 1을 더해줘야 함
     this.currentPageSize = postPages.getNumberOfElements();

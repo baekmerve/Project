@@ -1,5 +1,6 @@
 package com.example.actionprice.customerService.comment;
 
+import com.example.actionprice.customerService.chatGpt.ChatGptFetcher;
 import com.example.actionprice.customerService.post.Post;
 import com.example.actionprice.customerService.post.PostRepository;
 import com.example.actionprice.exception.CommentNotFoundException;
@@ -8,8 +9,8 @@ import com.example.actionprice.exception.UserNotFoundException;
 import com.example.actionprice.user.User;
 import com.example.actionprice.user.UserRepository;
 import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,8 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+
+    private final ChatGptFetcher chatGptFetcher;
 
     /**
      * 댓글 생성
@@ -130,7 +133,7 @@ public class CommentServiceImpl implements CommentService {
         boolean hasNoComments = (commentPage == null || !commentPage.hasContent());
 
         List<CommentSimpleDTO> commentList =
-                hasNoComments ? null : convertCommentPageToCommentSimpleDTOList(commentPage);
+                hasNoComments ? new ArrayList<CommentSimpleDTO>() : convertCommentPageToCommentSimpleDTOList(commentPage);
         int currentPageNum = hasNoComments ? 1 : (commentPage.getNumber() + 1);
         int currentPageSize = hasNoComments ? 0 : commentPage.getNumberOfElements();
         int listSize = hasNoComments ? 0 : commentList.size();
@@ -172,7 +175,7 @@ public class CommentServiceImpl implements CommentService {
         boolean hasNoComments = (commentPage == null || !commentPage.hasContent());
 
         List<CommentSimpleDTO> commentList =
-                hasNoComments ? null : convertCommentPageToCommentSimpleDTOList(commentPage);
+                hasNoComments ? new ArrayList<CommentSimpleDTO>() : convertCommentPageToCommentSimpleDTOList(commentPage);
         int currentPageNum = hasNoComments ? 1 : (commentPage.getNumber() + 1);
         int currentPageSize = hasNoComments ? 0 : commentPage.getNumberOfElements();
         int listSize = hasNoComments ? 0 : commentList.size();
@@ -197,6 +200,26 @@ public class CommentServiceImpl implements CommentService {
                 .build();
     }
 
+    @Override
+    public String generateAnswer(Integer postId, String answerType) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
+
+        String post_writer = post.getUser().getUsername();
+        String post_content = post.getContent();
+        String answer = "";
+
+        switch (answerType){
+            case "ai":
+//                answer = chatGptFetcher.generateChatGPTAnswer(post_writer, post_content);
+                answer = "it's an answer by chat-gpt";
+                break;
+            default:
+                break;
+        }
+        return "";
+    }
+
     private CommentSimpleDTO convertCommentToCommentSimpleDTO(Comment comment){
         return CommentSimpleDTO.builder()
                 .commentId(comment.getCommentId())
@@ -219,13 +242,7 @@ public class CommentServiceImpl implements CommentService {
     private List<CommentSimpleDTO> convertCommentPageToCommentSimpleDTOList(Page<Comment> commentPage) {
         return commentPage.getContent()
             .stream()
-            .map(comment -> CommentSimpleDTO.builder()
-                .commentId(comment.getCommentId())
-                .postId(comment.getPost().getPostId())
-                .username(comment.getUser().getUsername())
-                .content(comment.getContent())
-                .createdAt(comment.getCreatedAt())
-                .build())
+            .map(comment -> convertCommentToCommentSimpleDTO(comment))
             .toList();
     }
 }

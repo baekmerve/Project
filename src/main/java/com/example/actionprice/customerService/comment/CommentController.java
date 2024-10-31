@@ -1,10 +1,8 @@
 package com.example.actionprice.customerService.comment;
 
-import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-// TODO logined_username으로 수정해달라고 부탁하기
 /**
  * @author 연상훈
  * @created 2024-10-27 오후 12:13
@@ -101,6 +98,14 @@ public class CommentController {
         String logined_username = requestBody.get("username");
 
         return commentService.deleteComment(commentId, logined_username);
+    }
+
+    @GetMapping("/{postId}/comment/admin/{answertype}")
+    public String getAnswer(
+        @PathVariable("postId") int postId,
+        @PathVariable("answertype") String answertype
+    ){
+        return commentService.generateAnswer(postId, answertype);
     }
 
     /**

@@ -79,7 +79,7 @@ public class AuctionEntityServiceImpl implements AuctionEntityService {
 
   private AuctionBaseEntity convertRowToAni_andSave(OriginAuctionDataRow row, String date, String marketName, String category) {
     AuctionEntity_ani ani = AuctionEntity_ani.builder()
-        .del_date(convertStrToLocalDate(date))
+        .delDate(convertStrToLocalDate(date))
         .large(category)
         .middle(row.getItem_name())
         .productName(row.getKind_name())
@@ -94,7 +94,7 @@ public class AuctionEntityServiceImpl implements AuctionEntityService {
 
   private AuctionBaseEntity convertRowToFish_andSave(OriginAuctionDataRow row, String date, String marketName, String category) {
     AuctionEntity_fish fish = AuctionEntity_fish.builder()
-        .del_date(convertStrToLocalDate(date))
+        .delDate(convertStrToLocalDate(date))
         .large(category)
         .middle(row.getItem_name())
         .productName(row.getKind_name())
@@ -109,7 +109,7 @@ public class AuctionEntityServiceImpl implements AuctionEntityService {
 
   private AuctionBaseEntity convertRowToFoodCrops_andSave(OriginAuctionDataRow row, String date, String marketName, String category) {
     AuctionEntity_foodCrops foodCrops = AuctionEntity_foodCrops.builder()
-        .del_date(convertStrToLocalDate(date))
+        .delDate(convertStrToLocalDate(date))
         .large(category)
         .middle(row.getItem_name())
         .productName(row.getKind_name())
@@ -124,7 +124,7 @@ public class AuctionEntityServiceImpl implements AuctionEntityService {
 
   private AuctionBaseEntity convertRowToFruit_andSave(OriginAuctionDataRow row, String date, String marketName, String category) {
     AuctionEntity_fruit fruit = AuctionEntity_fruit.builder()
-        .del_date(convertStrToLocalDate(date))
+        .delDate(convertStrToLocalDate(date))
         .large(category)
         .middle(row.getItem_name())
         .productName(row.getKind_name())
@@ -139,7 +139,7 @@ public class AuctionEntityServiceImpl implements AuctionEntityService {
 
   private AuctionBaseEntity convertRowToVegetable_andSave(OriginAuctionDataRow row, String date, String marketName, String category) {
     AuctionEntity_vegetable produce = AuctionEntity_vegetable.builder()
-        .del_date(convertStrToLocalDate(date))
+        .delDate(convertStrToLocalDate(date))
         .large(category)
         .middle(row.getItem_name())
         .productName(row.getKind_name())
@@ -154,7 +154,7 @@ public class AuctionEntityServiceImpl implements AuctionEntityService {
 
   private AuctionBaseEntity convertSpecialCrops_andSave(OriginAuctionDataRow row, String date, String marketName, String category) {
     AuctionEntity_specialCrop specialCrop = AuctionEntity_specialCrop.builder()
-        .del_date(convertStrToLocalDate(date))
+        .delDate(convertStrToLocalDate(date))
         .large(category)
         .middle(row.getItem_name())
         .productName(row.getKind_name())

@@ -11,4 +11,6 @@ public interface CommentService {
 
     CommentListDTO getCommentListByPostId(Integer postId, Integer pageNum);
     CommentListDTO getCommentListByUsername(String username, Integer pageNum);
+
+    String generateAnswer(Integer postId, String answerType);
 }
