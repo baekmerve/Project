@@ -1,9 +1,9 @@
 package com.example.actionprice.auctionData;
 
-import com.example.actionprice.AuctionData.detailCategory.AllSortingComponent;
-import com.example.actionprice.AuctionData.service.AuctionEntityService;
-import com.example.actionprice.AuctionData.originAuctionData.OriginAuctionDataFetcher;
-import com.example.actionprice.AuctionData.originAuctionData.originApiRequestObj.OriginAuctionDataRow;
+import com.example.actionprice.auctionData.detailCategory.AllSortingComponent;
+import com.example.actionprice.auctionData.service.AuctionEntityService;
+import com.example.actionprice.auctionData.originAuctionData.OriginAuctionDataFetcher;
+import com.example.actionprice.auctionData.originAuctionData.originApiRequestObj.OriginAuctionDataRow;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;

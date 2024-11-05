@@ -4,8 +4,6 @@ import com.example.actionprice.exception.UserNotFoundException;
 import com.example.actionprice.user.User;
 import com.example.actionprice.user.UserRepository;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -21,7 +19,7 @@ public class FavoriteServiceImpl implements FavoriteService {
   private final UserRepository userRepository;
 
   @Override
-  public Map<String, String> createFavorite(
+  public FavoriteSimpleDTO createFavorite(
       String large,
       String middle,
       String small,
@@ -52,26 +50,29 @@ public class FavoriteServiceImpl implements FavoriteService {
     user.addFavorite(favorite);
     userRepository.save(user);
 
-    return Map.of("status", "OK", "method", "create", "username", logined_username, "favoriteName", favorite_name, "url", favoriteUrl);
+    return FavoriteSimpleDTO.builder()
+            .favoriteId(favorite.getFavoriteId())
+            .favoriteName(favorite.getFavoriteName())
+            .favoriteURL(favorite.getFavoriteURL())
+            .favorite_ownerS_username(logined_username)
+            .build();
   }
 
   // 이건 뭔가 더 효율적인 방법이 있을 것 같은데
   // favorite_name은 중복된 게 있을 수 있어서 이걸로 검색하면 안 됨.
   // 아니면 favorite id로 검색해야 하는데, 어떻게 될 지 몰라서 지금은 일단 이렇게 함
   @Override
-  public Map<String, String> deleteFavorite(String logined_username, String favorite_name) {
+  public boolean deleteFavorite(Integer favoriteId) {
 
-    User user = userRepository.findById(logined_username)
-        .orElseThrow(() -> new UserNotFoundException("user(" +logined_username + ") does not exist"));
+    Favorite favorite = favoriteRepository.findById(favoriteId).orElse(null);
 
-    // user와 favorite의 관계상 연결이 끊어지면 자동 삭제
-    boolean isFavoriteRemoved = user.getFavoriteSet()
-        .removeIf(favorite -> favorite.getFavoriteName().equals(favorite_name));
+    if (favorite == null) {
+      return false;
+    }
 
-    // 대신 save를 해서 해당 user에 대한 변경 사항을 레포지토리에 반영해줘야 함
-    userRepository.save(user);
+    favoriteRepository.deleteById(favoriteId);
 
-    return Map.of("status", "OK", "method", "delete", "username", logined_username, "favoriteName", favorite_name);
+    return true;
   }
 
   @Override
