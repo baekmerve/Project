@@ -49,14 +49,37 @@ public class UserRepositoryTest {
   }
 
   @Test
+  @Disabled
   public void userCreateTest() {
+    for (int i = 0; i < 50; i++) {
+      String number = String.format("%02d", i);
+      String username = String.format("user%s", number);
+      String email = String.format("abc%s@gmail.com", number);
+
+      User user = User.builder()
+          .username(username)
+          .password(passwordEncoder.encode("11111111"))
+          .email(email)
+          .build();
+
+      user.setUserRoles(false);
+
+      userRepository.save(user);
+    }
+  }
+
+  @Test
+  public void adminCreateTest() {
+    String username = "adminadmin";
+    String email = String.format("admin%s@gmail.com", 001);
+
     User user = User.builder()
-        .username("useruser")
+        .username(username)
         .password(passwordEncoder.encode("11111111"))
-        .email("abc@naver.com")
+        .email(email)
         .build();
 
-    user.addAuthorities(UserRole.ROLE_USER);
+    user.setUserRoles(true);
 
     userRepository.save(user);
   }

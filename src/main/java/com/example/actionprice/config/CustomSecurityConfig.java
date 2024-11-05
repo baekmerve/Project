@@ -83,7 +83,9 @@ public class CustomSecurityConfig {
                               "/api/user/generate/refreshToken",
                               "/api/user/checkForDuplicateUsername",
                               "/api/post/**",
-                              "/api/mypage/**"
+                              "/api/mypage/**",
+                              "/api/category/**",
+                              "/api/admin/**"
                       ).permitAll()
                       .anyRequest().authenticated())
           .authenticationManager(authenticationManager)
@@ -135,7 +137,7 @@ public class CustomSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() { // corsConfigurationSource
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // 허용할 도메인 설정
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:8080")); // 허용할 도메인 설정
         configuration.setAllowedMethods(Arrays.asList("*")); // 허용할 HTTP 메서드
         configuration.setAllowedHeaders(Arrays.asList("*")); // 허용할 헤더
         configuration.setAllowCredentials(true); // 자격 증명 허용

@@ -63,7 +63,7 @@ public class PostServiceImpl implements PostService{
             .published(post.isPublished())
             .username(postForm.getUsername())
             .createdAt(post.getCreatedAt())
-            .commentSize(0)
+            .page(0)
             .build();
     }
 
@@ -94,7 +94,7 @@ public class PostServiceImpl implements PostService{
             .published(post.isPublished())
             .username(post.getUser().getUsername())
             .createdAt(post.getCreatedAt())
-            .commentSize(0)
+            .page(0)
             .build();
     }
 
@@ -131,7 +131,7 @@ public class PostServiceImpl implements PostService{
                 .published(post.isPublished())
                 .username(post.getUser().getUsername())
                 .createdAt(post.getCreatedAt())
-                .commentSize(post.getCommentSet().size())
+                .page(0)
                 .build();
     }
 
@@ -165,7 +165,7 @@ public class PostServiceImpl implements PostService{
                 .published(post.isPublished())
                 .username(post.getUser().getUsername())
                 .createdAt(post.getCreatedAt())
-                .commentSize(0)
+                .page(0)
                 .build();
     }
 
@@ -176,7 +176,7 @@ public class PostServiceImpl implements PostService{
      * @info
      */
     @Override
-    public PostSimpleDTO getDetailPost(Integer postId, Integer commentPageNum) {
+    public PostSimpleDTO getDetailPost(Integer postId, int page) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
 
@@ -187,7 +187,7 @@ public class PostServiceImpl implements PostService{
                 .published(post.isPublished())
                 .username(post.getUser().getUsername())
                 .createdAt(post.getCreatedAt())
-                .commentSize(post.getCommentSet().size())
+                .page(page)
                 .build();
     }
 

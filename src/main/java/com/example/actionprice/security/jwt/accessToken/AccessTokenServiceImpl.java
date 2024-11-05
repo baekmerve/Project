@@ -5,6 +5,7 @@ import com.example.actionprice.exception.AccessTokenException.TOKEN_ERROR;
 import com.example.actionprice.security.jwt.JWTUtil;
 import com.example.actionprice.security.jwt.refreshToken.RefreshTokenService;
 import com.example.actionprice.user.User;
+import com.example.actionprice.user.UserRole;
 import com.google.gson.Gson;
 import io.jsonwebtoken.ClaimJwtException;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -52,7 +53,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
 
     // issueRefreshToken에서 문제 없었으니 엑세스 토큰 발급
     String accessToken = jwtUtil.generateToken(user, accessTokenValidityInMinutes);
-    return returnWithJson(accessToken, username);
+
+    boolean isAdmin = user.getAuthorities().contains(UserRole.ROLE_ADMIN.name());
+    String role = isAdmin ? UserRole.ROLE_ADMIN.name() : UserRole.ROLE_USER.name();
+
+    return returnWithJson(accessToken, username, role);
   }
 
   /**
@@ -71,7 +76,10 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     // checkRefreshFirst에서 문제 없었으니 엑세스 토큰 발급
     String accessToken = jwtUtil.generateToken(user, accessTokenValidityInMinutes);
 
-    return returnWithJson(accessToken, username);
+    boolean isAdmin = user.getAuthorities().contains(UserRole.ROLE_ADMIN.name());
+    String role = isAdmin ? UserRole.ROLE_ADMIN.name() : UserRole.ROLE_USER.name();
+
+    return returnWithJson(accessToken, username, role);
   }
 
   /**
@@ -146,7 +154,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
    * @created 2024-10-20 오후 1:27
    * @info 리프레시 토큰은 내부적으로만 관리하고, 반환하는 건 엑세스 토큰만
    */
-  private String returnWithJson(String accessToken, String username){
-    return new Gson().toJson(Map.of("access_token", accessToken, "username", username));
+  private String returnWithJson(String accessToken, String username, String role){
+    return new Gson().toJson(Map.of("access_token", accessToken, "username", username, "role", role));
   }
 }

@@ -1,6 +1,7 @@
 package com.example.actionprice.user.forms;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,10 +21,12 @@ import lombok.NoArgsConstructor;
 public class UserLoginForm {
 
   @NotBlank(message = "사용자 이름은 필수 입력 사항입니다.")
+  @NotNull(message = "사용자 이름은 필수 입력 사항입니다.")
   @Size(min = 6, max=20, message = "사용자 이름은 6자 이상 20자 이하로 입력해야 합니다.")
   private String username;
 
-  @NotBlank(message = "사용자 이름은 필수 입력 사항입니다.")
+  @NotBlank(message = "비밀번호 필수 입력 사항입니다.")
+  @NotNull(message = "비밀번호 필수 입력 사항입니다.")
   @Size(min = 8, max=16, message = "비밀번호는 8자 이상 16자 이하로 입력해야 합니다.")
   private String password;
 

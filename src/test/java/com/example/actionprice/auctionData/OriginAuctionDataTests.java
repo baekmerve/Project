@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import reactor.core.publisher.Flux;
-
 import java.util.concurrent.CountDownLatch;
 
 @SpringBootTest
@@ -37,9 +36,9 @@ public class OriginAuctionDataTests {
 
     @Test
     void auctionDataFluxTest() throws Exception {
-        String year = "2023";
-        String month = "10";
-        int endDay = 31;
+        String year = "2024";
+        String month = "11";
+        int endDay = 4;
 
         for (int i = 1; i <= endDay; i++) {
             // 날짜 형식 맞추기

@@ -24,7 +24,7 @@ public class AdminController {
   @GetMapping("/userlist")
   public UserListDTO getUserList(
       @RequestParam(name = "pageNum", defaultValue = "0", required = false) Integer pageNum,
-      @RequestParam(name = "keyword", required = false) String keyword
+      @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
   ) {
     log.info("[class] AdminController - [method] getUserList - page : {} | keyword : {}", pageNum, keyword);
     return userService.getUserList(keyword, pageNum);

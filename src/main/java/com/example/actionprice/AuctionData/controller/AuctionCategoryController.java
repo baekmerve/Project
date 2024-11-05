@@ -2,15 +2,21 @@ package com.example.actionprice.AuctionData.controller;
 
 import com.example.actionprice.AuctionData.dto.CategoryResultDTO;
 import com.example.actionprice.AuctionData.dto.CategoryDTO;
+import com.example.actionprice.AuctionData.entity.AuctionBaseEntity;
 import com.example.actionprice.AuctionData.service.AuctionCategoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/category") //수정할거
+@RequestMapping("api/category") //수정할거
 public class AuctionCategoryController {
 
     private final AuctionCategoryService auctionCategoryService;
@@ -41,10 +47,46 @@ public class AuctionCategoryController {
             @PathVariable String middle,
             @PathVariable String small,
             @PathVariable String rank,
-            @RequestParam LocalDate startDate,
-            @RequestParam LocalDate endDate,
-            @RequestParam(name = "page", defaultValue = "0", required = false) Integer page
+            @RequestParam(value = "startDate",required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(value = "endDate",required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestParam(name = "pageNum", defaultValue = "0", required = false) Integer pageNum
     ) {
-        return auctionCategoryService.getCategoryAndPage(large, middle, small, rank,startDate, endDate, page);
+
+        LocalDate today = LocalDate.now();
+        LocalDate oneYearAgo = today.minusYears(1);
+        // 날짜 유효성 검사
+        if (startDate == null || endDate == null || startDate.isBefore(oneYearAgo) || startDate.isAfter(endDate)) {
+            // 기본값으로 오늘 날짜로 설정
+            startDate = today;
+            endDate = today;
+        }
+
+        return auctionCategoryService.getCategoryAndPage(large, middle, small, rank,startDate, endDate, pageNum);
+    }
+
+
+    @GetMapping("/{large}/{middle}/{small}/{rank}/excel")
+    public ResponseEntity<byte[]> downloadExcel(
+            @PathVariable String large,
+            @PathVariable String middle,
+            @PathVariable String small,
+            @PathVariable String rank,
+            @RequestParam(value = "startDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(value = "endDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestParam(name = "pageNum", defaultValue = "0", required = false) Integer pageNum) {
+
+        CategoryResultDTO resultDTO = auctionCategoryService.getCategoryAndPage(large, middle, small, rank, startDate, endDate, pageNum);
+        List<AuctionBaseEntity> transactionHistoryList = resultDTO.getTransactionHistoryList();
+
+        // 엑셀 파일 생성
+        byte[] excelFile = auctionCategoryService.createExcelFile(transactionHistoryList);
+        // Content-Disposition 헤더 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=transaction_history.xlsx");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(excelFile);
     }
 }

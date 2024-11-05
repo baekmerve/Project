@@ -67,9 +67,10 @@ public class CommentController {
             @PathVariable("postId") int postId,
             @PathVariable("commentId") int commentId,
             @RequestBody Map<String, String> requestBody
-    ) {
+    ) throws IllegalAccessException {
         String logined_username = requestBody.get("username");
         String content = requestBody.get("content");
+        log.info("[class] CommentController - [method] updateComment - logined_username : {} | content : {}", logined_username, content);
 
         return commentService.updateComment(commentId, logined_username, content);
     }
@@ -94,8 +95,9 @@ public class CommentController {
             @PathVariable("postId") int postId,
             @PathVariable("commentId") int commentId,
             @RequestBody Map<String, String> requestBody
-    ) {
+    ) throws IllegalAccessException {
         String logined_username = requestBody.get("username");
+        log.info("[class] CommentController - [method] deleteComment - logined_username : {}", logined_username);
 
         return commentService.deleteComment(commentId, logined_username);
     }

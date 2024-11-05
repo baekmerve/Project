@@ -12,14 +12,6 @@ import java.util.List;
 
 public interface FoodCropsEntity_repo extends JpaRepository<AuctionEntity_foodCrops, Long> {
 
-
-//    List<AuctionEntity_foodCrops> findByLargeAndMiddleAndProductNameAndProductRank(String large,String middle,String productName,String productRank);
-
     Page<AuctionEntity_foodCrops> findByLargeAndMiddleAndProductNameAndProductRankAndDelDateBetween(String large, String middle, String productName, String productRank, LocalDate startDate, LocalDate endDate , Pageable pageable);
-
-
-
-
-
 
 }

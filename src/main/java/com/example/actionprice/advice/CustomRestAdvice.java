@@ -111,4 +111,11 @@ public class CustomRestAdvice {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
 
+  // 부정 접근 시(post/comment 작성자가 아닌 사람이 삭제하려고 시도할 경우 등)
+  @ExceptionHandler(IllegalAccessError.class)
+  @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
+  public ResponseEntity<String> handlerIllegalAccessException(IllegalAccessError e) {
+    return ResponseEntity.badRequest().body(e.getMessage());
+  }
+
 }

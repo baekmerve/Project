@@ -50,6 +50,7 @@ public class AuctionEntityServiceImpl implements AuctionEntityService {
     log.info("[class] AuctionEntityServiceImpl - [method] saveEntityByCategory");
     AuctionBaseEntity entity = null;
 
+
     switch (category) {
       case "식량작물":
         entity = convertRowToFoodCrops_andSave(row, date, marketName, category);

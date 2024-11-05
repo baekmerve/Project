@@ -1,10 +1,8 @@
 package com.example.actionprice.customerService.post.dto;
 
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
@@ -30,5 +28,5 @@ public class PostSimpleDTO {
   private boolean published;
   private String username;
   private LocalDateTime createdAt;
-  private int commentSize;
+  private int page;
 }

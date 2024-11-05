@@ -1,19 +1,21 @@
 package com.example.actionprice.AuctionData.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @Table(name="auction_category")
-
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuctionCategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long del_id;
+    @Column(name="del_id")
+    private Long delId;
 
     private String large;
     private String middle;

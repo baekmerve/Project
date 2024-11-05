@@ -13,5 +13,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface UserRepository extends JpaRepository<User, String> {
   Optional<User> findById(String username); // id = username
   Optional<User> findByEmail(String email);
-  Page<User> findByUsernameContaining(String keyword, Pageable pageable);
+  Page<User> findByUsernameContainingOrEmailContaining(
+      String usernameKeyword,
+      String emailKeyword,
+      Pageable pageable
+  );
 }

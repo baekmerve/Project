@@ -9,7 +9,7 @@ public interface PostService {
     PostSimpleDTO goUpdatePost(Integer postId, String logined_username);
     PostSimpleDTO updatePost(Integer postId,PostForm form);
     PostSimpleDTO deletePost(Integer postId, String logined_username);
-    PostSimpleDTO getDetailPost(Integer postId, Integer commentPageNum);
+    PostSimpleDTO getDetailPost(Integer postId, int page);
 
     PostListDTO getPostList(int pageNum, String keyword);
     PostListDTO getPostListForMyPage(String username, String keyword, Integer pageNum);

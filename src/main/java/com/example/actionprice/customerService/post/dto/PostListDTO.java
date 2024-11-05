@@ -49,19 +49,14 @@ public class PostListDTO {
     boolean hasContent = postPages.hasContent();
     this.postList = hasContent ? postPages.getContent()
         .stream()
-        .map(post -> {
-          Set<Comment> commentSet = post.getCommentSet();
-          int commentSize = (commentSet == null || commentSet.isEmpty()) ? 0 : commentSet.size();
-
-          return PostSimpleDTO.builder()
+        .map(post -> PostSimpleDTO.builder()
             .postId(post.getPostId())
             .title(post.getTitle())
             .published(post.isPublished())
             .username(post.getUser().getUsername())
             .createdAt(post.getCreatedAt())
-            .commentSize(commentSize)
-            .build();
-        })
+            .page(0)
+            .build())
         .toList() : new ArrayList<PostSimpleDTO>();
 
     this.currentPageNum = postPages.getNumber() + 1; // Page 객체는 첫 페이지가 0부터 시작함. 1부터 시작하려면 1을 더해줘야 함

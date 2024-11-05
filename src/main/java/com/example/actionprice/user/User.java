@@ -102,7 +102,6 @@ public class User {
       fetch = FetchType.LAZY) //유저를 불러올떄 포스트는 나중에 불러오게 함
   @BatchSize(size = 10)
   @Builder.Default
-
   private Set<Comment> commentSet = new HashSet<>(); //댓글
 
   @JsonManagedReference
@@ -125,25 +124,16 @@ public class User {
   }
 
   /**
-   * @param role : 오탈자 방지를 위해 UserRole 활용할 것. ex) UserRole.ROLE_USER, UserRole.ROLE_ADMIN.
-   * @author : 연상훈
-   * @created : 2024-10-06 오전 11:09
-   * @updated : 2024-10-11 오후 11:36
-   * @see : 절대 UserRole.ROLE_USER.name()까지 하면 안 됨. 그건 메서드 내부에서 알아서 함.
+   * @param isRoleSetForAdmin admin을 위한 roleSet인지 여부
+   * @author 연상훈
+   * @created 2024-11-04 오후 3:16
+   * @info true면 admin / false면 user
    */
-  public boolean addAuthorities(UserRole role) {
-    return this.authorities.add(role.name());
-  }
-
-  /**
-   * @param role : 오탈자 방지를 위해 UserRole 활용할 것. ex) UserRole.ROLE_USER, UserRole.ROLE_ADMIN.
-   * @author : 연상훈
-   * @created : 2024-10-06 오전 11:09
-   * @updated : 2024-10-11 오후 11:36
-   * @see : 절대 UserRole.ROLE_USER.name()까지 하면 안 됨. 그건 메서드 내부에서 알아서 함.
-   */
-  public boolean removeAuthorities(UserRole role) {
-    return this.authorities.remove(role.name());
+  public boolean setUserRoles(boolean isRoleSetForAdmin){
+    this.authorities = isRoleSetForAdmin ?
+        Set.of(UserRole.ROLE_ADMIN.name(), UserRole.ROLE_USER.name())
+        : Set.of(UserRole.ROLE_USER.name());
+    return isRoleSetForAdmin;
   }
 
   public boolean addPost(Post post) {

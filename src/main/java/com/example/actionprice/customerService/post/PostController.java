@@ -33,14 +33,18 @@ public class PostController {
      */
     @PostMapping("/create")
     public PostSimpleDTO createPost(@RequestBody @Validated(PostForm.PostCreateGroup.class) PostForm postForm){
-        log.info("[class] PostController - [method] createPost - username : {}, | title : {} | content : {}", postForm.getUsername(), postForm.getTitle(), postForm.getContent());
+        log.info(
+            "[class] PostController - [method] createPost - username : {}, | title : {} | content : {}",
+            postForm.getUsername(),
+            postForm.getTitle(),
+            postForm.getContent()
+        );
         return postService.createPost(postForm);
     }
 
     /**
      * 게시글 보기 기능
      * @param postId 내용을 확인할 게시글의 postId
-     * @param commentPageNum comment가 많아서 페이지가 있다면, 확인할 comment 페이지 번호 
      * @author 연상훈
      * @created 2024-10-27 오후 1:53
      * @see
@@ -50,10 +54,10 @@ public class PostController {
     @GetMapping("/{postId}/detail")
     public PostSimpleDTO goDetailPost(
         @PathVariable("postId") Integer postId,
-        @RequestParam(name = "commentPageNum", defaultValue = "0", required = false) Integer commentPageNum
+        @RequestParam(name = "page", defaultValue = "0", required = false) Integer page
     ) {
         log.info("goDetailPost");
-        return postService.getDetailPost(postId, commentPageNum);
+        return postService.getDetailPost(postId, page);
     }
 
     /**
@@ -70,7 +74,11 @@ public class PostController {
     ) {
         log.info("goUpdatePost");
 
-        log.info("[class] PostController - [method] deletePost - id : {} | username : {}", postId, username);
+        log.info(
+            "[class] PostController - [method] deletePost - id : {} | username : {}",
+            postId,
+            username)
+        ;
 
         return postService.goUpdatePost(postId, username);
     }
@@ -106,7 +114,11 @@ public class PostController {
     ) {
         String logined_username = requestBody.get("logined_username");
 
-        log.info("[class] PostController - [method] deletePost - id : {} | username : {}", postId, logined_username);
+        log.info(
+            "[class] PostController - [method] deletePost - id : {} | username : {}",
+            postId,
+            logined_username
+        );
 
         return postService.deletePost(postId, logined_username);
     }
@@ -124,7 +136,11 @@ public class PostController {
         @RequestParam(name = "pageNum", defaultValue = "0", required = false) Integer pageNum,
         @RequestParam(name = "keyword", defaultValue = "", required = false) String keyword
     ) {
-        log.info("[class] PostController - [method] getPostList - page : {} | keyword : {}", pageNum, keyword);
+        log.info(
+            "[class] PostController - [method] getPostList - page : {} | keyword : {}",
+            pageNum,
+            keyword
+        );
         return postService.getPostList(pageNum, keyword);
     }
 
