@@ -1,6 +1,9 @@
 package com.example.actionprice.security.filter;
 
+import com.example.actionprice.exception.UserNotFoundException;
+import com.example.actionprice.handler.LoginSuccessHandler;
 import com.example.actionprice.security.CustomUserDetailService;
+import com.example.actionprice.user.User;
 import com.example.actionprice.user.UserRepository;
 import com.example.actionprice.user.forms.UserLoginForm;
 import com.google.gson.Gson;
@@ -8,9 +11,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.time.LocalDateTime;
+
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +27,6 @@ import org.springframework.security.web.authentication.AbstractAuthenticationPro
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 
-// Todo 로그인 실패 시의 로직 구체화. 그리고 예외처리도 추가할 필요가 있음
 /**
  * 로그인 필터
  * @author 연상훈
@@ -37,7 +42,8 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
   private final CustomUserDetailService userDetailService;
-  private UserRepository userRepository;
+  private final AuthenticationSuccessHandler loginSuccessHandler;
+  private final UserRepository userRepository;
 
   /**
    * LoginFilter 생성자
@@ -49,12 +55,15 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
   public LoginFilter(
       String defaultFilterProcessesUrl,
       CustomUserDetailService userDetailService,
+      AuthenticationSuccessHandler loginSuccessHandler,
       UserRepository userRepository,
       AuthenticationManager authenticationManager
   ) {
     super(defaultFilterProcessesUrl);
     this.userDetailService = userDetailService;
+    this.loginSuccessHandler = loginSuccessHandler;
     this.userRepository = userRepository;
+    setAuthenticationSuccessHandler(loginSuccessHandler);
     setAuthenticationManager(authenticationManager);
   }
 
@@ -77,6 +86,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
       return null;
     }
+
     
     UserLoginForm loginForm = parseRequestJSON(request, UserLoginForm.class);
 
@@ -85,6 +95,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
     UserDetails userDetails = userDetailService.loadUserByUsername(loginForm.getUsername());
     log.info("CustomUserDetails : {}", userDetails);
 
+    request.setAttribute("username", loginForm.getUsername());
     UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, loginForm.getPassword(), userDetails.getAuthorities());
     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
@@ -100,9 +111,25 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
    */
   @Override
   protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-      FilterChain chain, Authentication authResult) {
-    log.info("----------- LoginFilter - successfulAuthentication -----------");
+      FilterChain chain, Authentication authResult) throws ServletException, IOException {
+    log.info("[class] LoginFilter - [method] successfulAuthentication > 로그인 성공");
+    String username = (String)request.getAttribute("username");
+    log.info("[class] LoginFilter - [method] successfulAuthentication > username : {}", username);
+    if(username == null) {
+      return;
+    }
 
+    User user = userRepository.findById(username)
+            .orElseThrow(() -> new UserNotFoundException("user(" + username + ") does not exist"));
+
+    // 로그인 성공하면 관련 기록 삭제
+    user.setLoginFailureCount(0);
+    user.setLockedAt(null);
+
+    userRepository.save(user);
+
+    log.info("[class] LoginFilter - [method] successfulAuthentication > 종료");
+    loginSuccessHandler.onAuthenticationSuccess(request, response, authResult);
   }
 
   /**
@@ -115,6 +142,33 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
   protected void unsuccessfulAuthentication(HttpServletRequest request,
       HttpServletResponse response, AuthenticationException failed) {
     log.info("[class] LoginFilter - [method] unsuccessfulAuthentication > 로그인 실패");
+
+    String username = (String)request.getAttribute("username");
+    log.info("[class] LoginFilter - [method] successfulAuthentication > username : {}", username);
+    if(username == null) {
+      return;
+    }
+
+    User user = userRepository.findById(username).orElse(null);
+    if(user == null) {
+      return;
+    }
+
+    int loginFailureCount = user.getLoginFailureCount()+1;
+
+    // 실패횟수가 5 이상이면
+    if(loginFailureCount >= 5) {
+      // 계정 잠금처리
+      user.setLockedAt(LocalDateTime.now());
+      // 실패횟수를 놔두면 무한히 잠금 시간이 갱싱될 수 있으니 초기화 해줌
+      // 그런데 이 상태에서 또 5번 틀려서 갱신되면 어쩔 수 없는 거고
+      loginFailureCount = 0;
+    }
+
+    user.setLoginFailureCount(loginFailureCount);
+    userRepository.save(user);
+
+    log.info("[class] LoginFilter - [method] unsuccessfulAuthentication > 종료");
   }
 
   /**

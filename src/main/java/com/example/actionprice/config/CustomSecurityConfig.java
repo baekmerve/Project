@@ -41,7 +41,7 @@ import java.util.Arrays;
 @SuppressWarnings("ALL")
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @RequiredArgsConstructor
 @Log4j2
 public class CustomSecurityConfig {
@@ -73,7 +73,10 @@ public class CustomSecurityConfig {
                           "/api/admin/**", // 어드민페이지
                           "/api/post/*/comment/admin/**" // 어드민 코멘트
                       ).hasRole("ADMIN")
-                      .requestMatchers("/api/user/login").anonymous() // 로그인을 안 한 사람만 이동 가능
+                      .requestMatchers(
+                              "/api/user/goLogin", // 로그인 페이지
+                              "/api/user/login" // 로그인 요청
+                      ).anonymous() // 로그인을 안 한 사람만 이동 가능
                       .requestMatchers(
                           "/api/user/logout",
                           "/api/post/**", // 게시글 생성, 수정, 삭제
@@ -97,11 +100,10 @@ public class CustomSecurityConfig {
           .addFilterBefore(loginFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class) // 필터 순서에 주의
           .addFilterBefore(tokenCheckFilter(), UsernamePasswordAuthenticationFilter.class)
           .addFilterBefore(refreshTokenFilter(), TokenCheckFilter.class)
-          .formLogin((formLogin) -> formLogin.loginPage("/api/user/login")
+          .formLogin((formLogin) -> formLogin.loginPage("/api/user/goLogin")
                   .usernameParameter("username")
                   .passwordParameter("password")
                   .loginProcessingUrl("/api/user/login")
-                  .successHandler(loginSuccessHandler())
                   .failureUrl("/api/user/login")
                   .defaultSuccessUrl("/", true))
           .logout((logout) -> logout.logoutUrl("/api/user/logout")
@@ -112,15 +114,23 @@ public class CustomSecurityConfig {
 
     @Bean
     AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-      AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-      authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
+      AuthenticationManagerBuilder authenticationManagerBuilder =
+              http.getSharedObject(AuthenticationManagerBuilder.class);
+      authenticationManagerBuilder.userDetailsService(userDetailsService)
+              .passwordEncoder(passwordEncoder());
 
       return authenticationManagerBuilder.build();
     }
 
     @Bean
     LoginFilter loginFilter(AuthenticationManager authenticationManager) throws Exception {
-      return new LoginFilter("/api/user/login", userDetailsService, userRepository, authenticationManager);
+      return new LoginFilter(
+              "/api/user/login",
+              userDetailsService,
+              loginSuccessHandler(),
+              userRepository,
+              authenticationManager
+      );
     }
 
     @Bean

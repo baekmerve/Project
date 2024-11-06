@@ -179,8 +179,11 @@ public class UserServiceImpl implements UserService {
       return false;
     }
 
-    // 로그인 실패횟수 초기화 및 lock 해제 기능도 추가해야 함
     user.setPassword(passwordEncoder.encode(newPassword));
+
+    // 로그인 실패해서 바꾸는 것일 수도 있으니, 기존 기록 초기화
+    user.setLoginFailureCount(0);
+    user.setLockedAt(null);
     userRepository.save(user);
 
     return true;

@@ -70,10 +70,10 @@ public class User {
 
   @Column(nullable = false)
   @Builder.Default
-  int loginFailureCount = 0;
+  private int loginFailureCount = 0;
 
   @Column(nullable = true)
-  LocalDateTime lockedAt;
+  private LocalDateTime lockedAt;
 
   @OneToOne(mappedBy = "user",
       orphanRemoval = true,
@@ -129,6 +129,22 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public int getLoginFailureCount() {
+    return loginFailureCount;
+  }
+
+  public void setLoginFailureCount(int loginFailureCount) {
+    this.loginFailureCount = loginFailureCount;
+  }
+
+  public LocalDateTime getLockedAt() {
+    return lockedAt;
+  }
+
+  public void setLockedAt(LocalDateTime lockedAt) {
+    this.lockedAt = lockedAt;
   }
 
   /**

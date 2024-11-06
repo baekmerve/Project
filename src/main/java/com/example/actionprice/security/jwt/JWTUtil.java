@@ -44,16 +44,15 @@ public class JWTUtil {
     headers.put("typ", "JWT");
     headers.put("alg", SIGNATURE_ALGORITHM.getValue());
 
-    String jwtStr = Jwts.builder()
-        .setHeader(headers)
-        .setSubject(user.getUsername())
-        .setClaims(Map.of("username", user.getUsername(), "role", user.getAuthorities()))
-        .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
-        .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(time).toInstant()))
-        .signWith(SIGNATURE_ALGORITHM, secretKey.getBytes(StandardCharsets.UTF_8))
-        .compact();
-
-    return jwtStr;
+    // setClaims가 무조건 setSubject보다 먼저 와야 함
+    return Jwts.builder()
+            .setHeader(headers)
+            .setClaims(Map.of("username", user.getUsername(), "role", user.getAuthorities()))
+            .setSubject(user.getUsername())
+            .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
+            .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(time).toInstant()))
+            .signWith(SIGNATURE_ALGORITHM, secretKey.getBytes(StandardCharsets.UTF_8))
+            .compact();
   }
 
   /**

@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +33,8 @@ public class UserController {
    * @created 2024-10-25 오후 12:47
    * @see : 보안관련메서드 @GetMapping("/login")
    */
-  @GetMapping("/login")
+  @PreAuthorize("isAnonymous()")
+  @GetMapping("/goLogin")
   public String goLogin() {
     return "goLogin";
   }
@@ -43,6 +45,7 @@ public class UserController {
    * @created 2024-10-25 오후 12:47
    * @see : 보안관련메서드 @GetMapping("/logout")
    */
+  @PreAuthorize("isAnonymous()")
   @GetMapping("/logout")
   public String goLogout() {
     return "goLogout";

@@ -44,7 +44,8 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
     log.info("headerStr : " + headerStr);
 
     // 토큰이 없거나 Bearer로 시작하지 않으면
-    if(headerStr == null || !headerStr.startsWith("Bearer ")) {
+    if(headerStr == null || headerStr.contains("undefined") || !headerStr.startsWith("Bearer ")) {
+      log.info("익명 사용자로 처리");
       // 익명 사용자로 처리
       filterChain.doFilter(request, response);
       return;

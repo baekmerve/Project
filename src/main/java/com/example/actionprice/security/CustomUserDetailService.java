@@ -2,6 +2,8 @@ package com.example.actionprice.security;
 
 import com.example.actionprice.user.User;
 import com.example.actionprice.user.UserRepository;
+
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -46,9 +48,28 @@ public class CustomUserDetailService implements UserDetailsService {
           .map(role -> new SimpleGrantedAuthority(role))
           .collect(Collectors.toSet());
 
-      return  new org.springframework.security.core.userdetails.User(
+      boolean isAccountNonLocked = true;
+
+      LocalDateTime accountLockedAt = user.getLockedAt();
+
+      // 계정이 잠긴 기록이 있다면
+      if(accountLockedAt != null) {
+        // 현재 시간이 잠긴 시간으로부터 5분이 지나지 않았다면
+        if(LocalDateTime.now().isBefore(accountLockedAt.plusMinutes(5))) {
+          isAccountNonLocked = false;
+        }
+
+        // 로그인 실패 기록은 로그인 성공하면 지워짐
+      }
+
+      return new org.springframework.security.core.userdetails.User(
               user.getUsername(),
               user.getPassword(),
-              grantedAuthorities);
+              true,
+              true,
+              true,
+              isAccountNonLocked,
+              grantedAuthorities
+      );
   }
 }

@@ -70,26 +70,18 @@ public class CommentServiceImpl implements CommentService {
     /**
      * 댓글 생성
      * @param commentId : 어떤 댓글의 내용을 수정해야 할 지 파악
-     * @param logined_username : 댓글을 수정하려는 사용자(현재 로그인 한 사용자)와 댓글을 작성한 사용자가 일치하는 지 확인하는 용도
      * @param content : 수정할 댓글 내용
      * @author 연상훈
      * @created 2024-10-27 오후 12:32
      * @throws CommentNotFoundException 해당 id를 가진 comment가 존재하지 않음
      */
     @Override
-    public CommentSimpleDTO updateComment(Integer commentId, String logined_username, String content) {
-        log.info("[class] CommentServiceImpl - [method] updateComment - logined_username : {} | commentId : {} | commentId : {}", logined_username, commentId, commentId);
+    public CommentSimpleDTO updateComment(Integer commentId, String content) {
+        log.info("[class] CommentServiceImpl - [method] updateComment - commentId : {} | commentId : {}", commentId, commentId);
 
         Comment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new CommentNotFoundException("comment(id : " + commentId + ") does not exist"));
 
-        String commented_username = comment.getUser().getUsername();
-        log.info("[class] CommentServiceImpl - [method] updateComment - logined_username : {} | commented_username : {}", logined_username, commented_username);
-
-        if(!commented_username.equals(logined_username)) {
-            log.error("댓글을 작성한 사용자와 삭제를 시도하려는 사용자의 username이 일치하지 않습니다.");
-            throw new IllegalAccessError("you are not allowed to update this comment");
-        }
 
         comment.setContent(content);
         commentRepository.save(comment);
@@ -100,25 +92,16 @@ public class CommentServiceImpl implements CommentService {
     /**
      * 댓글 생성
      * @param commentId : 어떤 댓글을 삭제해야 할 지 파악
-     * @param logined_username : 댓글을 삭제하려는 사용자(현재 로그인 한 사용자)와 댓글을 작성한 사용자가 일치하는 지 확인하는 용도
      * @author 연상훈
      * @created 2024-10-27 오후 12:32
      * @throws CommentNotFoundException 해당 id를 가진 comment가 존재하지 않음
      */
     @Override
-    public CommentSimpleDTO deleteComment(Integer commentId, String logined_username) {
-        log.info("[class] CommentServiceImpl - [method] deleteComment - logined_username : {} | commentId : {}", logined_username, commentId);
+    public CommentSimpleDTO deleteComment(Integer commentId) {
+        log.info("[class] CommentServiceImpl - [method] deleteComment - commentId : {}", commentId);
 
         Comment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new CommentNotFoundException("comment(id : " + commentId + ") does not exist"));
-
-        String commented_username = comment.getUser().getUsername();
-        log.info("[class] CommentServiceImpl - [method] deleteComment - logined_username : {} | commented_username : {}", logined_username, commented_username);
-
-        if(!commented_username.equals(logined_username)) {
-            log.error("댓글을 작성한 사용자와 삭제를 시도하려는 사용자의 username이 일치하지 않습니다.");
-            throw new IllegalAccessError("you are not allowed to delete this comment");
-        }
 
         commentRepository.delete(comment);
 
@@ -241,6 +224,14 @@ public class CommentServiceImpl implements CommentService {
                 break;
         }
         return sb.toString();
+    }
+
+    @Override
+    public boolean checkCommentOwner(Integer commentId, String username) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("comment(" + commentId + ") does not exist"));
+
+        return comment.getUser().getUsername().equals(username);
     }
 
     private CommentSimpleDTO convertCommentToCommentSimpleDTO(Comment comment){
