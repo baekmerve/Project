@@ -11,6 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -108,15 +109,7 @@ public class CustomRestAdvice {
   public ResponseEntity<String> handlerCommentNotFoundException(CommentNotFoundException e) {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
-
-  // 부정 접근 시(post/comment 작성자가 아닌 사람이 삭제하려고 시도할 경우 등)
-  @ExceptionHandler(IllegalAccessError.class)
-  @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
-  public ResponseEntity<String> handlerIllegalAccessException(IllegalAccessError e) {
-    return ResponseEntity.badRequest().body(e.getMessage());
-  }
-
-
+  
   @ExceptionHandler(TransactionDataNotFoundException.class)
   @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
   public ResponseEntity<String> handlerTransactionDataNotFoundException(TransactionDataNotFoundException e) {
@@ -129,6 +122,12 @@ public class CustomRestAdvice {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
 
-
-
+  // 부정 접근 시
+  @ExceptionHandler(AccessDeniedException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ResponseEntity<String> handlerAccessDeniedException(AccessDeniedException e) {
+    log.error(e.getMessage());
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+  }
+  
 }

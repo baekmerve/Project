@@ -104,10 +104,11 @@ public class CustomSecurityConfig {
                   .usernameParameter("username")
                   .passwordParameter("password")
                   .loginProcessingUrl("/api/user/login")
-                  .failureUrl("/api/user/login")
+                  .failureUrl("/api/user/goLogin")
                   .defaultSuccessUrl("/", true))
           .logout((logout) -> logout.logoutUrl("/api/user/logout")
-              .logoutSuccessUrl("/api/user/login"));
+              .logoutSuccessUrl("/api/user/goLogin")
+              .clearAuthentication(true));
       return http.build();
 
     }
