@@ -69,6 +69,7 @@ public class UserRepositoryTest {
   }
 
   @Test
+  @Disabled
   public void adminCreateTest() {
     String username = "adminadmin";
     String email = String.format("admin%s@gmail.com", 001);

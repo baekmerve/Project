@@ -73,9 +73,8 @@ public class CommentController {
             @PathVariable("commentId") int commentId,
             @RequestBody Map<String, String> requestBody
     ) {
-        String logined_username = getUsernameWithPrincipal();
         String content = requestBody.get("content");
-        log.info("[class] CommentController - [method] updateComment - logined_username : {} | content : {}", logined_username, content);
+        log.info("[class] CommentController - [method] updateComment - content : {}",  content);
 
         return commentService.updateComment(commentId, content);
     }
@@ -108,6 +107,7 @@ public class CommentController {
         return commentService.deleteComment(commentId);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/{postId}/comment/admin/{answertype}")
     public String getAnswer(
         @PathVariable("postId") int postId,

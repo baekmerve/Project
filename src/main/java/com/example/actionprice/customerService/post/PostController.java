@@ -4,6 +4,9 @@ import com.example.actionprice.customerService.post.dto.PostListDTO;
 import com.example.actionprice.customerService.post.dto.PostSimpleDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +34,7 @@ public class PostController {
      * postId를 반환하고, 그걸 가지고 리다이렉트해서 goDetailPost 메서드를 사용하는 것이 훨씬 효율적이라서
      * postId만 반환함
      */
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
     public PostSimpleDTO createPost(@RequestBody @Validated(PostForm.PostCreateGroup.class) PostForm postForm){
         log.info(
@@ -51,6 +55,7 @@ public class PostController {
      * "/api/post/{postId}/detail?commentPageNum=0" 같은 방식으로 호출해야 함
      * commentPageNum은 선택사항. 없으면 0으로 처리
      */
+    @PreAuthorize("@postServiceImpl.isPostPublished(#postId) or hasRole('ROLE_ADMIN') or @postServiceImpl.checkPostOwner(#postId, authentication.principal.getUsername())")
     @GetMapping("/{postId}/detail")
     public PostSimpleDTO goDetailPost(
         @PathVariable("postId") Integer postId,
@@ -61,12 +66,13 @@ public class PostController {
     }
 
     /**
-     * 게시글 내용 수정을 위해 수정 페이지에서 보여줄 내용을 반환하는 기능
+     * 게시글 내용 수정을 위해 수정 페이지에서 보여줄 내용을 반환하는 기능. 업데이트 화면으로 이동
      * @param postId 수정할 게시글의 postId
      * @author 연상훈
      * @created 2024-10-27 오후 1:57
      * @info 그냥 post 객체를 반환하면 안 되니까 PostSimpleDTO를 반환
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @postServiceImpl.checkPostOwner(#postId, authentication.principal.getUsername())")
     @GetMapping("/{postId}/update/{username}")
     public PostSimpleDTO goUpdatePost(
         @PathVariable("postId") Integer postId,
@@ -91,36 +97,29 @@ public class PostController {
      * @created 2024-10-27 오후 2:26
      * @info 게시글 수정 후 Map<String, Object> 형태로 처리 결과 messege와 postId를 반환함.
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @postServiceImpl.checkPostOwner(#postId, authentication.principal.getUsername())")
     @PostMapping("/{postId}/update")
     public PostSimpleDTO updatePost(
         @PathVariable("postId") Integer postId,
         @RequestBody @Validated(PostForm.PostUpdateGroup.class) PostForm postForm
     ) {
+
         return postService.updatePost(postId, postForm);
     }
 
     /**
      * 게시글 삭제 기능
      * @param postId
-     * @param requestBody Map<String, String> 형태이며, 반드시 logined_username를 담고 있어야 함
      * @author 연상훈
      * @created 2024-10-27 오후 2:45
      * @info 게시글 수정 후 처리 결과 messege를 반환함
      */
+    @PreAuthorize("hasRole('ROLE_ADMIN') or @postServiceImpl.checkPostOwner(#postId, authentication.principal.getUsername())")
     @PostMapping("/{postId}/delete")
     public PostSimpleDTO deletePost(
-        @PathVariable("postId") Integer postId,
-        @RequestBody Map<String, String> requestBody
+        @PathVariable("postId") Integer postId
     ) {
-        String logined_username = requestBody.get("logined_username");
-
-        log.info(
-            "[class] PostController - [method] deletePost - id : {} | username : {}",
-            postId,
-            logined_username
-        );
-
-        return postService.deletePost(postId, logined_username);
+        return postService.deletePost(postId);
     }
 
     /**

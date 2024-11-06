@@ -109,15 +109,8 @@ public class PostServiceImpl implements PostService{
     @Override
     public PostSimpleDTO updatePost(Integer postId, PostForm postForm) {
 
-        String username = postForm.getUsername();
-
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
-
-        if(!username.equals(post.getUser().getUsername())) {
-            log.error("you are not the writer");
-            return null;
-        }
 
         post.setTitle(postForm.getTitle());
         post.setContent(postForm.getContent());
@@ -138,23 +131,16 @@ public class PostServiceImpl implements PostService{
     /**
      * 게시글 삭제 기능
      * @param postId
-     * @param logined_username 로그인 중인 사용자의 username
      * @author 연상훈
      * @created 2024-10-27 오후 3:11
      * @throws PostNotFoundException
      */
     @Override
-    public PostSimpleDTO deletePost(Integer postId, String logined_username) {
+    public PostSimpleDTO deletePost(Integer postId) {
 
-        log.info("[class] PostServiceImpl - [method] deletePost - postId : {} | username : {}", postId, logined_username);
+        log.info("[class] PostServiceImpl - [method] deletePost - postId : {}", postId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
-
-        log.info("found the post");
-        if(!logined_username.equals(post.getUser().getUsername())) {
-            log.error("you are not the writer");
-            return null;
-        }
 
         postRepository.delete(post);
 
@@ -245,4 +231,19 @@ public class PostServiceImpl implements PostService{
         return new PostListDTO(postPage, keyword);
     }
 
+    @Override
+    public boolean checkPostOwner(Integer postId, String logined_username) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
+
+        return post.getUser().getUsername().equals(logined_username);
+    }
+
+    @Override
+    public boolean isPostPublished(Integer postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
+
+        return post.isPublished();
+    }
 }
