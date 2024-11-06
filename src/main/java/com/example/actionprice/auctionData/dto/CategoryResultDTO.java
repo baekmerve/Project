@@ -10,6 +10,7 @@ import java.util.List;
 
 public class CategoryResultDTO {
 
+    private List<AuctionBaseEntity> categoryList;
     private List<AuctionBaseEntity> transactionHistoryList; //데이터 리스트
     private int currentPageNum; // 현재 페이지 번호
     private int currentPageSize; // 현재 페이지에 존재하는 데이터 갯수

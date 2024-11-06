@@ -38,9 +38,9 @@ public class OriginAuctionDataTests {
     void auctionDataFluxTest() throws Exception {
         String year = "2024";
         String month = "11";
-        int endDay = 4;
+        int endDay = 5;
 
-        for (int i = 1; i <= endDay; i++) {
+        for (int i = 5; i <= endDay; i++) {
             // 날짜 형식 맞추기
             String day = String.format("%02d", i);
             String date = String.format("%s-%s-%s", year, month, day);

@@ -1,6 +1,7 @@
 package com.example.actionprice.security.filter;
 
 import com.example.actionprice.security.CustomUserDetailService;
+import com.example.actionprice.user.UserRepository;
 import com.example.actionprice.user.forms.UserLoginForm;
 import com.google.gson.Gson;
 import jakarta.servlet.FilterChain;
@@ -36,7 +37,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
   private final CustomUserDetailService userDetailService;
-  private AuthenticationSuccessHandler successHandler;
+  private UserRepository userRepository;
 
   /**
    * LoginFilter 생성자
@@ -48,13 +49,12 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
   public LoginFilter(
       String defaultFilterProcessesUrl,
       CustomUserDetailService userDetailService,
-      AuthenticationSuccessHandler successHandler,
+      UserRepository userRepository,
       AuthenticationManager authenticationManager
   ) {
     super(defaultFilterProcessesUrl);
     this.userDetailService = userDetailService;
-    this.successHandler = successHandler;
-    setAuthenticationSuccessHandler(successHandler);
+    this.userRepository = userRepository;
     setAuthenticationManager(authenticationManager);
   }
 
@@ -100,9 +100,9 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
    */
   @Override
   protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-      FilterChain chain, Authentication authResult) throws IOException, ServletException {
+      FilterChain chain, Authentication authResult) {
     log.info("----------- LoginFilter - successfulAuthentication -----------");
-    successHandler.onAuthenticationSuccess(request, response, authResult);
+
   }
 
   /**
@@ -113,8 +113,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
    */
   @Override
   protected void unsuccessfulAuthentication(HttpServletRequest request,
-      HttpServletResponse response, AuthenticationException failed)
-      throws IOException, ServletException {
+      HttpServletResponse response, AuthenticationException failed) {
     log.info("[class] LoginFilter - [method] unsuccessfulAuthentication > 로그인 실패");
   }
 

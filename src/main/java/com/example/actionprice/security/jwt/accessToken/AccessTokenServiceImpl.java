@@ -88,13 +88,8 @@ public class AccessTokenServiceImpl implements AccessTokenService {
    * @created 2024-10-20 오후 4:24
    */
   @Override
-  public Map<String, Object> validateAccessTokenInReqeust(HttpServletRequest request) {
-    String headerStr = request.getHeader("Authorization");
+  public String extractTokenInHeaderStr(String headerStr) {
     log.info("headerStr : " + headerStr);
-
-    if(headerStr == null || headerStr.length() < 8){
-      throw new AccessTokenException(TOKEN_ERROR.UNACCEPT);
-    }
 
     String tokenType = headerStr.substring(0,6);
     String tokenStr = headerStr.substring(7);
@@ -110,7 +105,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     log.info("this is bearer : " + tokenType);
 
     // 엑세스 토큰에 대한 엄격한 검사 후 결과 반환
-    return checkAccessToken(tokenStr);
+    return tokenStr;
   }
 
   /**
@@ -119,12 +114,10 @@ public class AccessTokenServiceImpl implements AccessTokenService {
    * @created 2024-10-20 오후 4:24
    */
   @Override
-  public Map<String,Object> checkAccessToken(String accessToken) {
+  public String validateAccessTokenAndExtractUsername_strictly(String accessToken) {
     try {
-      Map<String,Object> values = jwtUtil.validateToken(accessToken);
-      log.info("values : " + values);
-
-      return values;
+      String username = jwtUtil.validateToken(accessToken);
+      return username;
     } catch (ExpiredJwtException e) {
       log.error("만료된 엑세스 토큰입니다.");
       throw new AccessTokenException(TOKEN_ERROR.EXPIRED);
@@ -134,15 +127,29 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     } catch (UnsupportedJwtException e) {
       log.error("잘못된 형식입니다. 위변조 가능성이 있는 엑세스 토큰입니다.");
       throw new AccessTokenException(TOKEN_ERROR.MALFORM);
-    } catch (ClaimJwtException e) {
-      log.error("잘못된 클레임입니다. 위변조 가능성이 있는 엑세스 토큰입니다.");
-      throw new AccessTokenException(TOKEN_ERROR.UNEXPECTED);
     } catch (SignatureException e) {
       log.error("잘못된 서명입니다. 위변조 가능성이 있는 엑세스 토큰입니다.");
       throw new AccessTokenException(TOKEN_ERROR.BADSIGN);
     } catch (JwtException e){
       log.error("엑세스 토큰 검사 중 기타 오류가 발생하였습니다.");
       throw new AccessTokenException(TOKEN_ERROR.MALFORM);
+    }
+  }
+
+  @Override
+  public String validateAccessTokenAndExtractUsername_leniently(String accessToken) {
+    try {
+      String username = jwtUtil.validateToken(accessToken);
+      return username;
+    } catch (MalformedJwtException e) {
+      log.error("잘못된 형식입니다. 위변조 가능성이 있는 엑세스 토큰입니다.");
+      throw new AccessTokenException(TOKEN_ERROR.MALFORM);
+    } catch (UnsupportedJwtException e) {
+      log.error("잘못된 형식입니다. 위변조 가능성이 있는 엑세스 토큰입니다.");
+      throw new AccessTokenException(TOKEN_ERROR.MALFORM);
+    } catch (SignatureException e) {
+      log.error("잘못된 서명입니다. 위변조 가능성이 있는 엑세스 토큰입니다.");
+      throw new AccessTokenException(TOKEN_ERROR.BADSIGN);
     }
   }
 

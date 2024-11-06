@@ -23,4 +23,7 @@ public interface AuctionCategoryService {
 
     // 엑셀 다운로드
     byte[] createExcelFile(List<AuctionBaseEntity> transactionHistoryList);
+
+    CategoryResultDTO getCategory(String large, String middle, String small, String rank, LocalDate startDate, LocalDate endDate);
+
 }

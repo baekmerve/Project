@@ -29,8 +29,8 @@ public class FavoriteController {
       @PathVariable("rank") String rank,
       @RequestBody Map<String, String> requestBody
   ){
-    String logined_username = requestBody.get("username");
-    String favorite_name = requestBody.get("favoriteName");
+    String logined_username = requestBody.get("logined_username");
+    String favorite_name = requestBody.get("favorite_name");
 
     return favoriteService.createFavorite(
             large,
@@ -48,10 +48,10 @@ public class FavoriteController {
     boolean isDeleted = favoriteService.deleteFavorite(favoriteId);
 
     if(isDeleted){
-      return Map.of("status", "failure", "favoriteId", favoriteId);
+      return Map.of("status", "success", "favoriteId", favoriteId);
     }
 
-    return Map.of("status", "success", "favoriteId", favoriteId);
+    return Map.of("status", "failure", "favoriteId", favoriteId);
   }
 
 }

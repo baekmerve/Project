@@ -1,13 +1,11 @@
 package com.example.actionprice.advice;
 
-import com.example.actionprice.exception.CommentNotFoundException;
+import com.example.actionprice.exception.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import com.example.actionprice.exception.InvalidEmailAddressException;
-import com.example.actionprice.exception.PostNotFoundException;
-import com.example.actionprice.exception.UserNotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -117,5 +115,20 @@ public class CustomRestAdvice {
   public ResponseEntity<String> handlerIllegalAccessException(IllegalAccessError e) {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
+
+
+  @ExceptionHandler(TransactionDataNotFoundException.class)
+  @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
+  public ResponseEntity<String> handlerTransactionDataNotFoundException(TransactionDataNotFoundException e) {
+    return ResponseEntity.badRequest().body(e.getMessage());
+  }
+
+  @ExceptionHandler(InvalidCategoryException.class)
+  @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
+  public ResponseEntity<String> handlerInvalidCategoryException(InvalidCategoryException e) {
+    return ResponseEntity.badRequest().body(e.getMessage());
+  }
+
+
 
 }

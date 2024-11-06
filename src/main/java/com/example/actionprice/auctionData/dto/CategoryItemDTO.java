@@ -1,8 +1,10 @@
 package com.example.actionprice.auctionData.dto;
 
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
+@ToString
 public class CategoryItemDTO {
 
     private int id; // 고유 ID

@@ -6,7 +6,6 @@ import com.example.actionprice.security.filter.LoginFilter;
 import com.example.actionprice.security.filter.RefreshTokenFilter;
 import com.example.actionprice.security.filter.TokenCheckFilter;
 import com.example.actionprice.security.jwt.accessToken.AccessTokenService;
-import com.example.actionprice.security.jwt.refreshToken.RefreshTokenService;
 import com.example.actionprice.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -50,7 +49,6 @@ public class CustomSecurityConfig {
     private final CustomUserDetailService userDetailsService;
     private final UserRepository userRepository;
     private final AccessTokenService accessTokenService;
-    private final RefreshTokenService refreshTokenService;
 
     // method - @Bean
     /**
@@ -71,21 +69,28 @@ public class CustomSecurityConfig {
           .csrf((csrfconfig) -> csrfconfig.disable())
           .authorizeHttpRequests((authz) -> authz
                       .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                      .requestMatchers("/admin/**").hasRole("ADMIN")
-                      .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                      .requestMatchers("/api/user/login").anonymous() // 로그인을 안 한 사람만 로그인 창으로 이동 가능
-                      .requestMatchers("/api/user/logout").authenticated() // 로그인을 한 사람만 로그아웃 창으로 이동 가능
                       .requestMatchers(
-                              "/",
-                              "/api/user/register",
-                              "/api/user/sendVerificationCode",
-                              "/api/user/checkVerificationCode",
-                              "/api/user/generate/refreshToken",
-                              "/api/user/checkForDuplicateUsername",
-                              "/api/post/**",
-                              "/api/mypage/**",
-                              "/api/category/**",
-                              "/api/admin/**"
+                          "/api/admin/**", // 어드민페이지
+                          "/api/post/*/comment/admin/**" // 어드민 코멘트
+                      ).hasRole("ADMIN")
+                      .requestMatchers("/api/user/login").anonymous() // 로그인을 안 한 사람만 이동 가능
+                      .requestMatchers(
+                          "/api/user/logout",
+                          "/api/post/**", // 게시글 생성, 수정, 삭제
+                          "/api/mypage/**", // 마이페이지(개인정보 열람, 내 게시글 목록, 내 즐겨찾기 목록, 사용자 삭제)
+                          "/api/post/*/detail/**", // 게시글 내 댓글 생성, 수정, 삭제
+                          "/api/category/favorite/**", // 즐겨찾기 삭제
+                          "/api/category/*/*/*/*/favorite" // 즐겨찾기 생성
+                      ).authenticated() // 로그인을 한 사람만 이동 가능
+                      .requestMatchers(
+                              "/swagger-ui/**", // 스웨거
+                              "/v3/api-docs/**", // 스웨거
+                              "/", // 홈
+                              "/api/user/**", // 사용자 관련 기능들
+                              "/api/post/list", // 게시글 목록 열람 가능
+                              "/api/post/*/detail", // 게시글 내용 열람 가능
+                              "/api/post/comments", // 게시글 내 댓글 목록 열람 가능
+                              "/api/category/**" // 카테고리
                       ).permitAll()
                       .anyRequest().authenticated())
           .authenticationManager(authenticationManager)
@@ -96,7 +101,8 @@ public class CustomSecurityConfig {
                   .usernameParameter("username")
                   .passwordParameter("password")
                   .loginProcessingUrl("/api/user/login")
-                  .failureUrl("/api/user/login") // TODO failureForwardUrl는 기존 url을 유지하면서 이동. 거기에 failureHandler를 쓰면 로그인 실패 횟수를 체크할 수 있을 것 같은데?
+                  .successHandler(loginSuccessHandler())
+                  .failureUrl("/api/user/login")
                   .defaultSuccessUrl("/", true))
           .logout((logout) -> logout.logoutUrl("/api/user/logout")
               .logoutSuccessUrl("/api/user/login"));
@@ -114,7 +120,7 @@ public class CustomSecurityConfig {
 
     @Bean
     LoginFilter loginFilter(AuthenticationManager authenticationManager) throws Exception {
-      return new LoginFilter("/api/user/login", userDetailsService, loginSuccessHandler(), authenticationManager);
+      return new LoginFilter("/api/user/login", userDetailsService, userRepository, authenticationManager);
     }
 
     @Bean
@@ -125,7 +131,7 @@ public class CustomSecurityConfig {
 
     @Bean
     public RefreshTokenFilter refreshTokenFilter() {
-      return new RefreshTokenFilter("/api/user/generate/refreshToken", accessTokenService);
+      return new RefreshTokenFilter(accessTokenService);
     }
 
     /**

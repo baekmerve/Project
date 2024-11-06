@@ -2,14 +2,12 @@ package com.example.actionprice.security.filter;
 
 import com.example.actionprice.exception.RefreshTokenException;
 import com.example.actionprice.security.jwt.accessToken.AccessTokenService;
-import com.google.gson.Gson;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -29,8 +27,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class RefreshTokenFilter extends OncePerRequestFilter {
 
-  // SecurityConfig에서 생성하면서 주입 받을 것들
-  private final String refreshPath;
   private final AccessTokenService accessTokenService;
 
   /**
@@ -42,38 +38,34 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
    */
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    String path = request.getRequestURI();
+    log.info("리프레시 토큰 필터 실행");
 
-    if(!path.equals(refreshPath)){
-      log.info("리프레시 토큰 필터를 위한 경로가 아니므로 넘어갑니다.");
+    String headerStr = request.getHeader("Authorization");
+    log.info("headerStr : " + headerStr);
+
+    // 토큰이 없거나 Bearer로 시작하지 않으면
+    if(headerStr == null || !headerStr.startsWith("Bearer ")) {
+      // 익명 사용자로 처리
       filterChain.doFilter(request, response);
       return;
     }
 
-    log.info("리프레시 토큰 필터 실행");
-
-    // 전송된 json에서 accessToken과 refreshToken을 얻어온다
-    Map<String, String> tokens = parseRequestJSON(request);
-    if (tokens == null || !tokens.containsKey("access_token") || !tokens.containsKey("username")) {
-      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      response.getWriter().println("Invalid request payload");
-      return;
-    }
-
-    String access_token = tokens.get("access_token");
-    String username = tokens.get("username");
-
-    // 여기서 서비스 사용
-    log.info("access_token : " + access_token);
-
     try {
-      accessTokenService.checkAccessToken(access_token);
+      String tokenStr = accessTokenService.extractTokenInHeaderStr(headerStr);
 
-      String jsonStr = accessTokenService.issueAccessToken(username);
+      try {
+        String username = accessTokenService.validateAccessTokenAndExtractUsername_leniently(tokenStr);
+        log.info("username : " + username);
 
-      response.setStatus(HttpServletResponse.SC_OK);
-      response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-      response.getWriter().println(jsonStr);
+        filterChain.doFilter(request, response);
+      } catch (ExpiredJwtException e) {
+        String username = e.getClaims().getSubject();
+        String jsonStr = accessTokenService.issueAccessToken(username);
+
+        response.getWriter().println(jsonStr);
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+      }
     } catch (RefreshTokenException e) {
       e.sendResponseError(response);
     } catch (Exception e) {
@@ -81,22 +73,6 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
       response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
       response.getWriter().println("토큰 처리 실패");
     }
-  }
-
-  private Map<String, String> parseRequestJSON(HttpServletRequest request) {
-
-    // json 데이터를 분석해서 username, mpw 전달 값을 Map으로 처리
-    try(Reader reader = new InputStreamReader(request.getInputStream())){
-
-      Gson gson = new Gson();
-
-      return gson.fromJson(reader, Map.class);
-    }
-    catch(Exception e){
-      log.error(e.getMessage());
-    }
-
-    return null;
   }
 
 }

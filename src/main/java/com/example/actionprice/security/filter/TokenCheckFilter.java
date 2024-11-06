@@ -34,62 +34,47 @@ public class TokenCheckFilter extends OncePerRequestFilter {
   private final CustomUserDetailService userDetailService;
   private final AccessTokenService accessTokenService;
 
-  // 토큰 검사를 실행하는 경로
-  private final String[] tokenCheckPath = {
-      "/api/admin/**",
-      "/api/user/login",
-      "/api/user/logout"
-  };
-
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
     log.info("[class] TokenCheckFilter - [method] doFilterInternal > 시작");
 
+    String headerStr = request.getHeader("Authorization");
+    log.info("headerStr : " + headerStr);
 
-    if(shouldCheckToken(request)) {
-      try{
-        Map<String, Object> payload = accessTokenService.validateAccessTokenInReqeust(request);
-        log.info("Payload : " + payload);
+    // 토큰이 없거나 Bearer로 시작하지 않으면
+    if(headerStr == null || !headerStr.startsWith("Bearer ")) {
+      // 익명 사용자로 처리
+      filterChain.doFilter(request, response);
+      return;
+    }
 
-        String username = (String)payload.get("username");
-        log.info("username : " + username);
+    try{
+      String tokenStr = accessTokenService.extractTokenInHeaderStr(headerStr);
+      String username = accessTokenService.validateAccessTokenAndExtractUsername_strictly(tokenStr);
+      log.info("username : " + username);
 
-        UserDetails userDetails = userDetailService.loadUserByUsername(username);
-        log.info("UserDetails : " + userDetails);
+      UserDetails userDetails = userDetailService.loadUserByUsername(username);
+      log.info("UserDetails : " + userDetails);
 
-        UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)); // 추가됨
-        log.info("Authentication Token : " + authenticationToken);
+      UsernamePasswordAuthenticationToken authenticationToken =
+          new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+      authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)); // 추가됨
+      log.info("Authentication Token : " + authenticationToken);
 
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-        log.info("Security Context : " + SecurityContextHolder.getContext());
+      SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+      log.info("Security Context : " + SecurityContextHolder.getContext());
 
-      } catch(AccessTokenException e){
-        e.sendResponseError(response);
-        return;
-      }
+    } catch(AccessTokenException e){
+      e.sendResponseError(response);
+      return;
+    } catch (Exception e) {
+      log.error("TokenCheckFilter 처리 중 예외 발생: {}", e.getMessage());
+      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      response.getWriter().println("인증 처리 실패");
+      return;
     }
 
     filterChain.doFilter(request, response);
   }
 
-  /**
-   * 인증이 필요한 경로인지 체크하는 메서드
-   * @author 연상훈
-   * @created 2024-10-08 오후 4:32
-   * @updated 2024-10-17 오후 7:24 : 반환 값 수정. 토큰 체크가 필요한 경로면 true를 반환
-   */
-  private boolean shouldCheckToken(HttpServletRequest request) {
-    String path = request.getRequestURI();
-
-    // for문을 돌리면서 tokenCheckPath에 포함된 게 하나라도 있으면 = 토큰 체크를 해야 하는 경로에 해당하면
-    for(String startWord : tokenCheckPath){
-      if(path.startsWith(startWord)){
-        return true; // true를 반환
-      }
-    }
-    // 포함된 게 아니었으니 for문 돌리면서 안 걸러지고 여기까지 옴.
-    return false; // 그러니 false를 반환
-  }
 }

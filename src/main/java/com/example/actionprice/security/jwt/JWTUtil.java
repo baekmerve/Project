@@ -62,36 +62,14 @@ public class JWTUtil {
    * @author : 연상훈
    * @created : 2024-10-06 오후 2:35
    */
-  public Map<String, Object> validateToken(String token) throws JwtException {
+  public String validateToken(String token) throws JwtException {
     log.info("token : " + token);
-    Map<String, Object> claims = Jwts.parserBuilder()
+    return Jwts.parserBuilder()
         .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)) // 설정한 secret key
         .build() // 아무래도 parseClaimsJws가 이미 객체로서 존재하는 Jwts에 설정하는 거라서 중간에 빌드를 하는 듯?
         .parseClaimsJws(token) // 파싱 및 검증, 실패 시 에러
-        .getBody(); // jwt(json web token)인 만큼 결국 json 형태라서 중요한 내용은 body에 있음
-
-    return claims;
-  }
-
-  /**
-   * 토큰 내부에 있는 유저네임 읽기
-   * @param token : 토큰 내용 [String]
-   * @author : 연상훈
-   * @created : 2024-10-06 오후 2:35
-   */
-  public String getUsernameFromToken(String token) {
-    try {
-      Claims claims = Jwts.parserBuilder()
-          .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8))
-          .build()
-          .parseClaimsJws(token)
-          .getBody();
-      return claims.getSubject();
-    }
-    catch (JwtException e) {
-      log.error("해당 토큰 파싱에 실패했습니다", e);
-      return null;
-    }
+        .getBody() // jwt(json web token)인 만큼 결국 json 형태라서 중요한 내용은 body에 있음
+        .getSubject();
   }
 
 }

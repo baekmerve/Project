@@ -7,5 +7,7 @@ public interface UserService {
   boolean createUser(UserRegisterForm userRegisterForm);
   boolean checkUserExistsWithUsername(String username);
   boolean checkUserExistsWithEmail(String email);
+  boolean checkUsernameAndEmailExists(String username, String email);
   UserListDTO getUserList(String keyword, int pageNumber);
+  boolean changePassword(String username, String newPassword);
 }

@@ -27,40 +27,35 @@ public class UserRegisterForm {
   // 현재 정규식 : 6~20자, 영어+숫자
   @NotBlank(
       message = "사용자 이름은 필수 입력사항입니다.",
-      groups = {CheckForDuplicateUsernameGroup.class, SendVerificationCodeGroup.class})
+      groups = {CheckDuplicationOfUsernameGroup.class, SendVerificationCodeGroup.class, CheckValidityOfVerificationCodeGroup.class})
   @NotNull(
       message = "사용자 이름은 필수 입력사항입니다.",
-      groups = {CheckForDuplicateUsernameGroup.class, SendVerificationCodeGroup.class})
+      groups = {CheckDuplicationOfUsernameGroup.class, SendVerificationCodeGroup.class, CheckValidityOfVerificationCodeGroup.class})
   @Pattern(
       regexp = "^[a-zA-Z0-9]{6,20}$",
       message = "사용자 이름은 6~20자의 영어와 숫자로 구성됩니다.",
-      groups = {CheckForDuplicateUsernameGroup.class, SendVerificationCodeGroup.class})
+      groups = {CheckDuplicationOfUsernameGroup.class, SendVerificationCodeGroup.class, CheckValidityOfVerificationCodeGroup.class})
   private String username;
 
   // 현재 정규식 : 8~16자, 영어+숫자+특수문자
-  @NotBlank(
-      message = "비밀번호는 필수 입력사항입니다.",
-      groups = {SendVerificationCodeGroup.class, CheckValidityOfPasswordGroup.class})
-  @NotNull(
-      message = "비밀번호는 필수 입력사항입니다.",
-      groups = {SendVerificationCodeGroup.class, CheckValidityOfPasswordGroup.class})
+  @NotBlank(message = "비밀번호는 필수 입력사항입니다.")
+  @NotNull(message = "비밀번호는 필수 입력사항입니다.")
   @Pattern(
       regexp = "^(?=.*[a-zA-Z])(?=.*\\d)(?=.*\\W).{8,16}$",
-      message = "비밀번호는 8~16자로 구성되며, 영어, 숫자, 특수문자를 각각 하나 이상 포함해야 합니다.",
-      groups = {SendVerificationCodeGroup.class, CheckValidityOfPasswordGroup.class})
+      message = "비밀번호는 8~16자로 구성되며, 영어, 숫자, 특수문자를 각각 하나 이상 포함해야 합니다.")
   private String password;
 
-  @NotBlank(message = "이메일은 필수입니다.", groups = {SendVerificationCodeGroup.class})
-  @NotNull(message = "이메일은 필수입니다.", groups = {SendVerificationCodeGroup.class})
-  @Email(message = "유효한 이메일 주소를 입력하세요.", groups = {SendVerificationCodeGroup.class})
+  @NotBlank(message = "이메일은 필수입니다.", groups = {SendVerificationCodeGroup.class, CheckValidityOfVerificationCodeGroup.class})
+  @NotNull(message = "이메일은 필수입니다.", groups = {SendVerificationCodeGroup.class, CheckValidityOfVerificationCodeGroup.class})
+  @Email(message = "유효한 이메일 주소를 입력하세요.", groups = {SendVerificationCodeGroup.class, CheckValidityOfVerificationCodeGroup.class})
   private String email;
 
-  @NotBlank(message = "인증코드는 필수입니다.")
-  @NotNull(message = "인증코드는 필수입니다.")
+  @NotBlank(message = "인증코드는 필수입니다.", groups = {CheckValidityOfVerificationCodeGroup.class})
+  @NotNull(message = "인증코드는 필수입니다.", groups = {CheckValidityOfVerificationCodeGroup.class})
   private String verificationCode;
 
   // 검증 시 구분을 위한 그룹입니다. 실질적인 기능은 없습니다.
-  public interface CheckForDuplicateUsernameGroup {}
+  public interface CheckDuplicationOfUsernameGroup {}
   public interface SendVerificationCodeGroup {}
-  public interface CheckValidityOfPasswordGroup {}
+  public interface CheckValidityOfVerificationCodeGroup {}
 }

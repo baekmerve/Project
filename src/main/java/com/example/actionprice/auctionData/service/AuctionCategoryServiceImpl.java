@@ -5,6 +5,8 @@ import com.example.actionprice.auctionData.dto.CategoryResultDTO;
 import com.example.actionprice.auctionData.dto.CategoryDTO;
 import com.example.actionprice.auctionData.entity.*;
 import com.example.actionprice.auctionData.repository.*;
+import com.example.actionprice.exception.InvalidCategoryException;
+import com.example.actionprice.exception.TransactionDataNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.poi.ss.usermodel.Row;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,11 +42,13 @@ public class AuctionCategoryServiceImpl implements AuctionCategoryService {
     // 중분류 갖고오기
     @Override
     public CategoryDTO getMiddleCategory(String large) {
+        log.info("[class] AuctionCategoryServiceImpl - [method] - getMiddleCategory - large : {}", large);
         List<CategoryItemDTO> list = categoryEntity_repo.findByLarge(large)
                 .stream()
                 .map(entity -> new CategoryItemDTO(entity.getMiddle()))
                 .distinct()
                 .toList();
+        list.stream().forEach(System.out::println);
         return CategoryDTO.builder()
                 .large(large)
                 .list(list)
@@ -53,12 +58,14 @@ public class AuctionCategoryServiceImpl implements AuctionCategoryService {
     // 소분류 갖고오기
     @Override
     public CategoryDTO getSmallCategory(String large, String middle) {
-
+        log.info("[class] AuctionCategoryServiceImpl - [method] - getMiddleCategory : large : {} | middle : {}", large, middle);
         List<CategoryItemDTO> list = categoryEntity_repo.findByLargeAndMiddle(large, middle)
                 .stream()
                 .map(entity -> new CategoryItemDTO(entity.getProductName()))
                 .distinct()
                 .toList();
+
+        list.stream().forEach(System.out::println);
         return CategoryDTO.builder()
                 .large(large)
                 .middle(middle)
@@ -69,12 +76,13 @@ public class AuctionCategoryServiceImpl implements AuctionCategoryService {
     // 등급 갖고오기
     @Override
     public CategoryDTO getProductRankCategory(String large, String middle, String small) {
-
+        log.info("[class] AuctionCategoryServiceImpl - [method] - getMiddleCategory : large : {} | middle : {} | small : {}", large, middle, small);
         List<CategoryItemDTO> list = categoryEntity_repo.findByLargeAndMiddleAndProductName(large, middle, small)
                 .stream()
                 .map(entity -> new CategoryItemDTO(entity.getProductRank()))
                 .distinct()
                 .toList();
+        list.stream().forEach(System.out::println);
         return CategoryDTO.builder()
                 .large(large)
                 .middle(middle)
@@ -130,7 +138,7 @@ public class AuctionCategoryServiceImpl implements AuctionCategoryService {
                 break;
 
             default:
-                throw new IllegalArgumentException("Invalid category: " + large);
+                throw new InvalidCategoryException("Invalid category: " + large);
         }
 
         return convertPageToDTO(pageResult);
@@ -170,20 +178,19 @@ public class AuctionCategoryServiceImpl implements AuctionCategoryService {
                 .collect(Collectors.toList()); // 리스트로 수집
     }
 
-
     /**
+     * @param
      * @author homin
      * @created 2024. 11. 1. 오후 12:43
      * @updated 2024. 11. 1. 오후 12:43
-     * @param  transactionHistoryList AuctionBaseEntity 에 담긴 리스트 데이터
      * @info Excel 시트를 위한 로직
      */
     // 엑셀 파일 생성 메서드
     @Override
-    public byte[] createExcelFile(List<AuctionBaseEntity> transactionHistoryList) {
+    public byte[] createExcelFile(List<AuctionBaseEntity> categoryList) {
         // 거래 내역이 없을 경우 처리
-        if (transactionHistoryList == null || transactionHistoryList.isEmpty()) {
-            throw new IllegalArgumentException("거래 내역이 없습니다.");
+        if (categoryList == null || categoryList.isEmpty()) {
+            throw new TransactionDataNotFoundException("거래 내역이 없습니다.");
         }
 
         // 엑셀 워크북 생성
@@ -205,9 +212,10 @@ public class AuctionCategoryServiceImpl implements AuctionCategoryService {
 
             // 데이터 추가
             int rowNum = 1;
-            for (AuctionBaseEntity entity : transactionHistoryList) {
+            for (AuctionBaseEntity entity : categoryList) {
                 Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(entity.getDelDate().toString());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                row.createCell(0).setCellValue(entity.getDelDate().format(formatter));
                 row.createCell(1).setCellValue(entity.getMarket_name());
                 row.createCell(2).setCellValue(entity.getLarge());
                 row.createCell(3).setCellValue(entity.getMiddle());
@@ -223,10 +231,54 @@ public class AuctionCategoryServiceImpl implements AuctionCategoryService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException("엑셀 파일 생성 중 오류 발생");
+            throw new TransactionDataNotFoundException("엑셀 파일 생성 중 오류 발생");
         }
     }
 
+    @Override
+    public CategoryResultDTO getCategory(String large, String middle, String small, String rank, LocalDate startDate, LocalDate endDate) {
+        List<AuctionBaseEntity> categories; // 거래 내역을 담을 리스트
+
+        switch (large) {
+            case "축산물":
+                categories = convertListObject(aniEntity_repo.findByLargeAndMiddleAndProductNameAndProductRankAndDelDateBetween(
+                        large, middle, small, rank, startDate, endDate));
+                break;
+
+            case "수산물":
+                categories = convertListObject(fishEntity_repo.findByLargeAndMiddleAndProductNameAndProductRankAndDelDateBetween(
+                        large, middle, small, rank, startDate, endDate));
+                break;
+
+            case "식량작물":
+                categories = convertListObject(foodCropsEntity_repo.findByLargeAndMiddleAndProductNameAndProductRankAndDelDateBetween(
+                        large, middle, small, rank, startDate, endDate));
+                break;
+
+            case "과일류":
+                categories = convertListObject(fruitEntity_repo.findByLargeAndMiddleAndProductNameAndProductRankAndDelDateBetween(
+                        large, middle, small, rank, startDate, endDate));
+                break;
+
+            case "특용작물":
+                categories = convertListObject(specialCropsEntity_repo.findByLargeAndMiddleAndProductNameAndProductRankAndDelDateBetween(
+                        large, middle, small, rank, startDate, endDate));
+                break;
+
+            case "채소류":
+                categories = convertListObject(vegetableEntity_repo.findByLargeAndMiddleAndProductNameAndProductRankAndDelDateBetween(
+                        large, middle, small, rank, startDate, endDate));
+                break;
+
+            default:
+                throw new InvalidCategoryException("Invalid category: " + large);
+        }
+
+        // CategoryResultDTO 생성 후 반환
+        return CategoryResultDTO.builder()
+                .categoryList(categories)
+                .build();
+    }
 }
 
 

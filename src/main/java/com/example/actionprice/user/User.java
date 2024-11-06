@@ -17,6 +17,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -66,6 +67,13 @@ public class User {
   @Column(nullable=false, unique=true)
   @Email
   private String email;
+
+  @Column(nullable = false)
+  @Builder.Default
+  int loginFailureCount = 0;
+
+  @Column(nullable = true)
+  LocalDateTime lockedAt;
 
   @OneToOne(mappedBy = "user",
       orphanRemoval = true,
