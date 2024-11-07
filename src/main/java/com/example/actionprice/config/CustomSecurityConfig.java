@@ -7,6 +7,10 @@ import com.example.actionprice.security.filter.RefreshTokenFilter;
 import com.example.actionprice.security.filter.TokenCheckFilter;
 import com.example.actionprice.security.jwt.accessToken.AccessTokenService;
 import com.example.actionprice.user.UserRepository;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -18,10 +22,14 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -97,18 +105,16 @@ public class CustomSecurityConfig {
                       ).permitAll()
                       .anyRequest().authenticated())
           .authenticationManager(authenticationManager)
-          .addFilterBefore(loginFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class) // 필터 순서에 주의
           .addFilterBefore(tokenCheckFilter(), UsernamePasswordAuthenticationFilter.class)
           .addFilterBefore(refreshTokenFilter(), TokenCheckFilter.class)
+          .addFilterBefore(loginFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
+          .addFilterBefore(logoutFilter(), UsernamePasswordAuthenticationFilter.class) // 필터 순서에 주의
           .formLogin((formLogin) -> formLogin.loginPage("/api/user/goLogin")
                   .usernameParameter("username")
                   .passwordParameter("password")
                   .loginProcessingUrl("/api/user/login")
                   .failureUrl("/api/user/goLogin")
-                  .defaultSuccessUrl("/", true))
-          .logout((logout) -> logout.logoutUrl("/api/user/logout")
-              .logoutSuccessUrl("/api/user/goLogin")
-              .clearAuthentication(true));
+                  .defaultSuccessUrl("/", true));
       return http.build();
 
     }
@@ -175,4 +181,20 @@ public class CustomSecurityConfig {
         return new TokenCheckFilter(userDetailsService, accessTokenService);
     }
 
+  @Bean
+  public LogoutFilter logoutFilter() {
+    SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+    LogoutSuccessHandler logoutSuccessHandler = new LogoutSuccessHandler() {
+      @Override
+      public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+        response.setStatus(HttpServletResponse.SC_OK);  // 200 OK 응답
+        response.getWriter().write("{\"message\": \"로그아웃 성공\"}");  // JSON 응답
+      }
+    };
+
+    LogoutFilter logoutFilter = new LogoutFilter(logoutSuccessHandler, logoutHandler);
+    logoutFilter.setFilterProcessesUrl("/api/user/logout");
+
+    return logoutFilter;
+  }
 }
