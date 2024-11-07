@@ -23,6 +23,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -79,15 +80,17 @@ public class CustomSecurityConfig {
                       .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                       .requestMatchers(
                           "/api/admin/**", // 어드민페이지
-                          "/api/post/*/comment/admin/**" // 어드민 코멘트
+                          "/api/post/*/comment/admin/*" // 어드민 코멘트
                       ).hasRole("ADMIN")
                       .requestMatchers(
-                              "/api/user/goLogin", // 로그인 페이지
-                              "/api/user/login" // 로그인 요청
+                          "/api/user/login" // 로그인 요청
                       ).anonymous() // 로그인을 안 한 사람만 이동 가능
                       .requestMatchers(
                           "/api/user/logout",
-                          "/api/post/**", // 게시글 생성, 수정, 삭제
+                          "/api/post/create",
+                          "/api/post/*/update",
+                          "/api/post/*/delete",
+                          "/api/post/*/update/*",// 게시글 생성, 수정, 삭제
                           "/api/mypage/**", // 마이페이지(개인정보 열람, 내 게시글 목록, 내 즐겨찾기 목록, 사용자 삭제)
                           "/api/post/*/detail/**", // 게시글 내 댓글 생성, 수정, 삭제
                           "/api/category/favorite/**", // 즐겨찾기 삭제
@@ -98,9 +101,12 @@ public class CustomSecurityConfig {
                               "/v3/api-docs/**", // 스웨거
                               "/", // 홈
                               "/api/user/**", // 사용자 관련 기능들
-                              "/api/post/list", // 게시글 목록 열람 가능
-                              "/api/post/*/detail", // 게시글 내용 열람 가능
-                              "/api/post/comments", // 게시글 내 댓글 목록 열람 가능
+                              "/api/post/list",
+                              "/api/post/list*",// 게시글 목록 열람 가능
+                              "/api/post/*/detail",
+                              "/api/post/*/detail*", // 게시글 내용 열람 가능
+                              "/api/post/comments",
+                              "/api/post/comments*", // 게시글 내 댓글 목록 열람 가능
                               "/api/category/**" // 카테고리
                       ).permitAll()
                       .anyRequest().authenticated())
@@ -109,12 +115,7 @@ public class CustomSecurityConfig {
           .addFilterBefore(refreshTokenFilter(), TokenCheckFilter.class)
           .addFilterBefore(loginFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
           .addFilterBefore(logoutFilter(), UsernamePasswordAuthenticationFilter.class) // 필터 순서에 주의
-          .formLogin((formLogin) -> formLogin.loginPage("/api/user/goLogin")
-                  .usernameParameter("username")
-                  .passwordParameter("password")
-                  .loginProcessingUrl("/api/user/login")
-                  .failureUrl("/api/user/goLogin")
-                  .defaultSuccessUrl("/", true));
+          .formLogin((formLogin) -> formLogin.disable());
       return http.build();
 
     }
@@ -187,8 +188,10 @@ public class CustomSecurityConfig {
     LogoutSuccessHandler logoutSuccessHandler = new LogoutSuccessHandler() {
       @Override
       public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        response.setStatus(HttpServletResponse.SC_OK);  // 200 OK 응답
-        response.getWriter().write("{\"message\": \"로그아웃 성공\"}");  // JSON 응답
+          SecurityContextHolder.clearContext();
+          log.info("----------------- 로그아웃 ----------------------");
+          response.setStatus(HttpServletResponse.SC_OK);  // 200 OK 응답
+          response.getWriter().write("logout success");  // JSON 응답
       }
     };
 

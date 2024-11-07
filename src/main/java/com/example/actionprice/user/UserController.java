@@ -28,18 +28,6 @@ public class UserController {
   private final SendEmailService sendEmailService;
 
   /**
-   * 중복 로그인 등(보안 이슈)을 방지하기 위해 프론트에서 요청 받는 용도
-   * @author 연상훈
-   * @created 2024-10-25 오후 12:47
-   * @see : 보안관련메서드 @GetMapping("/login")
-   */
-  @PreAuthorize("isAnonymous()")
-  @GetMapping("/goLogin")
-  public String goLogin() {
-    return "goLogin";
-  }
-
-  /**
    * 로그인 기능 @PostMapping("/login")
    * @author : 연상훈
    * @created : 2024-10-06 오후 6:35

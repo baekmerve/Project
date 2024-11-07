@@ -1,8 +1,14 @@
 package com.example.actionprice.user.favorite;
 
 import java.util.Map;
+
+import com.example.actionprice.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 // return을 responseEntity로 해서 에러 처리도 같이 해버릴까?
@@ -21,6 +27,7 @@ public class FavoriteController {
   private final FavoriteService favoriteService;
 
   // principal을 쓸까 그냥 요청으로 받을까
+  @PreAuthorize("isAuthenticated()")
   @PostMapping("/{large}/{middle}/{small}/{rank}/favorite")
   public FavoriteSimpleDTO createFavorite(
       @PathVariable("large") String large,
@@ -29,7 +36,7 @@ public class FavoriteController {
       @PathVariable("rank") String rank,
       @RequestBody Map<String, String> requestBody
   ){
-    String logined_username = requestBody.get("logined_username");
+    String logined_username = getUsernameWithPrincipal();
     String favorite_name = requestBody.get("favorite_name");
 
     return favoriteService.createFavorite(
@@ -45,13 +52,24 @@ public class FavoriteController {
   @PostMapping("/favorite/{favoriteId}/delete")
   public Map<String, Object> deleteFavorite(@PathVariable("favoriteId") Integer favoriteId){
 
-    boolean isDeleted = favoriteService.deleteFavorite(favoriteId);
+    boolean isDeleted = favoriteService.deleteFavorite(favoriteId, getUsernameWithPrincipal(), isLoginedUserAdmin());
 
     if(isDeleted){
       return Map.of("status", "success", "favoriteId", favoriteId);
     }
 
     return Map.of("status", "failure", "favoriteId", favoriteId);
+  }
+
+  private String getUsernameWithPrincipal(){
+    UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    return userDetails.getUsername();
+  }
+
+  private boolean isLoginedUserAdmin(){
+    UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()); // 비교대상
+    return userDetails.getAuthorities().contains(adminAuthority);
   }
 
 }

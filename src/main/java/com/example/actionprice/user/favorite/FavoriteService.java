@@ -13,7 +13,7 @@ public interface FavoriteService {
       String favorite_name
   );
 
-  boolean deleteFavorite(Integer favoriteId);
+  boolean deleteFavorite(Integer favoriteId, String logined_username, boolean isAdmin);
 
   List<FavoriteSimpleDTO> getFavoriteList(String logined_username);
 }

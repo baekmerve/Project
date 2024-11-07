@@ -62,7 +62,7 @@ public class FavoriteServiceImpl implements FavoriteService {
   // favorite_name은 중복된 게 있을 수 있어서 이걸로 검색하면 안 됨.
   // 아니면 favorite id로 검색해야 하는데, 어떻게 될 지 몰라서 지금은 일단 이렇게 함
   @Override
-  public boolean deleteFavorite(Integer favoriteId) {
+  public boolean deleteFavorite(Integer favoriteId, String logined_username, boolean isAdmin) {
 
     Favorite favorite = favoriteRepository.findById(favoriteId).orElse(null);
 
@@ -70,9 +70,13 @@ public class FavoriteServiceImpl implements FavoriteService {
       return false;
     }
 
-    favoriteRepository.deleteById(favoriteId);
+    if (isAdmin || favorite.getUser().getUsername().equals(logined_username)) {
+      favoriteRepository.deleteById(favoriteId);
 
-    return true;
+      return true;
+    }
+
+    return false;
   }
 
   @Override

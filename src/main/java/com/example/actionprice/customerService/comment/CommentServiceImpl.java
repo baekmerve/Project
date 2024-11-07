@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -64,7 +65,7 @@ public class CommentServiceImpl implements CommentService {
         post.addComment(comment);
         postRepository.save(post);
 
-        return convertCommentToCommentSimpleDTO(comment);
+        return convertCommentToCommentSimpleDTO(comment, logined_username);
     }
 
     /**
@@ -76,17 +77,20 @@ public class CommentServiceImpl implements CommentService {
      * @throws CommentNotFoundException 해당 id를 가진 comment가 존재하지 않음
      */
     @Override
-    public CommentSimpleDTO updateComment(Integer commentId, String content) {
+    public CommentSimpleDTO updateComment(Integer commentId, String content, String logined_username) {
         log.info("[class] CommentServiceImpl - [method] updateComment - commentId : {} | commentId : {}", commentId, commentId);
 
         Comment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new CommentNotFoundException("comment(id : " + commentId + ") does not exist"));
 
+        String owner_username = comment.getUser().getUsername();
+
+        checkCommentOwner(owner_username, logined_username);
 
         comment.setContent(content);
         commentRepository.save(comment);
 
-        return convertCommentToCommentSimpleDTO(comment);
+        return convertCommentToCommentSimpleDTO(comment, owner_username);
     }
 
     /**
@@ -97,15 +101,19 @@ public class CommentServiceImpl implements CommentService {
      * @throws CommentNotFoundException 해당 id를 가진 comment가 존재하지 않음
      */
     @Override
-    public CommentSimpleDTO deleteComment(Integer commentId) {
+    public CommentSimpleDTO deleteComment(Integer commentId, String logined_username) {
         log.info("[class] CommentServiceImpl - [method] deleteComment - commentId : {}", commentId);
 
         Comment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new CommentNotFoundException("comment(id : " + commentId + ") does not exist"));
 
+        String owner_username = comment.getUser().getUsername();
+
+        checkCommentOwner(owner_username, logined_username);
+
         commentRepository.delete(comment);
 
-        return convertCommentToCommentSimpleDTO(comment);
+        return convertCommentToCommentSimpleDTO(comment, owner_username);
     }
 
     /**
@@ -226,19 +234,11 @@ public class CommentServiceImpl implements CommentService {
         return sb.toString();
     }
 
-    @Override
-    public boolean checkCommentOwner(Integer commentId, String username) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException("comment(" + commentId + ") does not exist"));
-
-        return comment.getUser().getUsername().equals(username);
-    }
-
-    private CommentSimpleDTO convertCommentToCommentSimpleDTO(Comment comment){
+    private CommentSimpleDTO convertCommentToCommentSimpleDTO(Comment comment, String username){
         return CommentSimpleDTO.builder()
                 .commentId(comment.getCommentId())
                 .postId(comment.getPost().getPostId())
-                .username(comment.getUser().getUsername())
+                .username(username)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
                 .build();
@@ -256,7 +256,13 @@ public class CommentServiceImpl implements CommentService {
     private List<CommentSimpleDTO> convertCommentPageToCommentSimpleDTOList(Page<Comment> commentPage) {
         return commentPage.getContent()
             .stream()
-            .map(comment -> convertCommentToCommentSimpleDTO(comment))
+            .map(comment -> convertCommentToCommentSimpleDTO(comment, comment.getUser().getUsername()))
             .toList();
+    }
+
+    private void checkCommentOwner(String owner_username, String logined_username) {
+        if (!owner_username.equals(logined_username)) {
+            throw new AccessDeniedException("you are not allowed to access this comment");
+        }
     }
 }

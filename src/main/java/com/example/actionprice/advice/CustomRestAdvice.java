@@ -12,6 +12,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -123,9 +124,9 @@ public class CustomRestAdvice {
   }
 
   // 부정 접근 시
-  @ExceptionHandler(AccessDeniedException.class)
+  @ExceptionHandler({AccessDeniedException.class, InsufficientAuthenticationException.class})
   @ResponseStatus(HttpStatus.FORBIDDEN)
-  public ResponseEntity<String> handlerAccessDeniedException(AccessDeniedException e) {
+  public ResponseEntity<String> handlerAccessDeniedException(Exception e) {
     log.error(e.getMessage());
     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
   }

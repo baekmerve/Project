@@ -36,10 +36,10 @@ public class TokenCheckFilter extends OncePerRequestFilter {
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-    log.info("[class] TokenCheckFilter - [method] doFilterInternal > 시작");
+    log.info("토큰 체크 필터 실행");
 
     String headerStr = request.getHeader("Authorization");
-    log.info("headerStr : " + headerStr);
+    log.info("url : {} | headerStr : {}", request.getRequestURI(), headerStr);
 
     // 토큰이 없거나 Bearer로 시작하지 않으면
     if(headerStr == null || headerStr.contains("undefined") || !headerStr.startsWith("Bearer ")) {

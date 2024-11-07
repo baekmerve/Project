@@ -2,15 +2,15 @@ package com.example.actionprice.customerService.post;
 
 import com.example.actionprice.customerService.post.dto.PostListDTO;
 import com.example.actionprice.customerService.post.dto.PostSimpleDTO;
+import com.example.actionprice.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * @author 연상훈
@@ -55,14 +55,25 @@ public class PostController {
      * "/api/post/{postId}/detail?commentPageNum=0" 같은 방식으로 호출해야 함
      * commentPageNum은 선택사항. 없으면 0으로 처리
      */
-    @PreAuthorize("@postServiceImpl.isPostPublished(#postId) or hasRole('ROLE_ADMIN') or @postServiceImpl.checkPostOwner(#postId, authentication.principal.getUsername())")
     @GetMapping("/{postId}/detail")
     public PostSimpleDTO goDetailPost(
         @PathVariable("postId") Integer postId,
         @RequestParam(name = "page", defaultValue = "0", required = false) Integer page
     ) {
         log.info("goDetailPost");
-        return postService.getDetailPost(postId, page);
+
+        // 로그인하지 않은 사람도 볼 수는 있도록
+        String logined_username = null;
+        boolean isAdmin = false;
+
+        try {
+            logined_username = getUsernameWithPrincipal();
+            isAdmin = isLoginedUserAdmin();
+        } catch (Exception e) {
+            log.error(e);
+        }
+
+        return postService.getDetailPost(postId, page, logined_username, isAdmin);
     }
 
     /**
@@ -72,7 +83,7 @@ public class PostController {
      * @created 2024-10-27 오후 1:57
      * @info 그냥 post 객체를 반환하면 안 되니까 PostSimpleDTO를 반환
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN') or @postServiceImpl.checkPostOwner(#postId, authentication.principal.getUsername())")
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{postId}/update/{username}")
     public PostSimpleDTO goUpdatePost(
         @PathVariable("postId") Integer postId,
@@ -86,7 +97,7 @@ public class PostController {
             username)
         ;
 
-        return postService.goUpdatePost(postId, username);
+        return postService.goUpdatePost(postId, getUsernameWithPrincipal(), isLoginedUserAdmin());
     }
 
     /**
@@ -97,14 +108,14 @@ public class PostController {
      * @created 2024-10-27 오후 2:26
      * @info 게시글 수정 후 Map<String, Object> 형태로 처리 결과 messege와 postId를 반환함.
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN') or @postServiceImpl.checkPostOwner(#postId, authentication.principal.getUsername())")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{postId}/update")
     public PostSimpleDTO updatePost(
         @PathVariable("postId") Integer postId,
         @RequestBody @Validated(PostForm.PostUpdateGroup.class) PostForm postForm
     ) {
 
-        return postService.updatePost(postId, postForm);
+        return postService.updatePost(postId, postForm, getUsernameWithPrincipal(), isLoginedUserAdmin());
     }
 
     /**
@@ -114,12 +125,12 @@ public class PostController {
      * @created 2024-10-27 오후 2:45
      * @info 게시글 수정 후 처리 결과 messege를 반환함
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN') or @postServiceImpl.checkPostOwner(#postId, authentication.principal.getUsername())")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{postId}/delete")
     public PostSimpleDTO deletePost(
         @PathVariable("postId") Integer postId
     ) {
-        return postService.deletePost(postId);
+        return postService.deletePost(postId, getUsernameWithPrincipal(), isLoginedUserAdmin());
     }
 
     /**
@@ -141,6 +152,17 @@ public class PostController {
             keyword
         );
         return postService.getPostList(pageNum, keyword);
+    }
+
+    private String getUsernameWithPrincipal(){
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userDetails.getUsername();
+    }
+
+    private boolean isLoginedUserAdmin(){
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()); // 비교대상
+        return userDetails.getAuthorities().contains(adminAuthority);
     }
 
 }

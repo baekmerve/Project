@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 /**
@@ -76,13 +77,15 @@ public class PostServiceImpl implements PostService{
      * @throws PostNotFoundException
      */
     @Override
-    public PostSimpleDTO goUpdatePost(Integer postId, String logined_username) {
+    public PostSimpleDTO goUpdatePost(Integer postId, String logined_username, boolean isAdmin) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
 
-        if(!logined_username.equals(post.getUser().getUsername())) {
-            log.error("you are not the writer");
-            return null;
+        String owner_username = post.getUser().getUsername();
+
+        // 비공개글이면
+        if (!post.isPublished()) {
+            checkIfPostOwnerOrAdmin(owner_username, logined_username, isAdmin);
         }
         
         // 게시글 수정하러 가는데, commentSize는 알 필요가 없으니 그냥 0으로 고정.
@@ -92,7 +95,7 @@ public class PostServiceImpl implements PostService{
             .title(post.getTitle())
             .content(post.getContent())
             .published(post.isPublished())
-            .username(post.getUser().getUsername())
+            .username(owner_username)
             .createdAt(post.getCreatedAt())
             .page(0)
             .build();
@@ -107,10 +110,17 @@ public class PostServiceImpl implements PostService{
      * @throws PostNotFoundException
      */
     @Override
-    public PostSimpleDTO updatePost(Integer postId, PostForm postForm) {
+    public PostSimpleDTO updatePost(Integer postId, PostForm postForm, String logined_username, boolean isAdmin) {
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
+
+        String owner_username = post.getUser().getUsername();
+
+        // 비공개글이면
+        if (!post.isPublished()) {
+            checkIfPostOwnerOrAdmin(owner_username, logined_username, isAdmin);
+        }
 
         post.setTitle(postForm.getTitle());
         post.setContent(postForm.getContent());
@@ -122,7 +132,7 @@ public class PostServiceImpl implements PostService{
                 .title(post.getTitle())
                 .content(post.getContent())
                 .published(post.isPublished())
-                .username(post.getUser().getUsername())
+                .username(owner_username)
                 .createdAt(post.getCreatedAt())
                 .page(0)
                 .build();
@@ -136,12 +146,18 @@ public class PostServiceImpl implements PostService{
      * @throws PostNotFoundException
      */
     @Override
-    public PostSimpleDTO deletePost(Integer postId) {
+    public PostSimpleDTO deletePost(Integer postId, String logined_username, boolean isAdmin) {
 
         log.info("[class] PostServiceImpl - [method] deletePost - postId : {}", postId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
 
+        String owner_username = post.getUser().getUsername();
+
+        // 비공개글이면
+        if (!post.isPublished()) {
+            checkIfPostOwnerOrAdmin(owner_username, logined_username, isAdmin);
+        }
         postRepository.delete(post);
 
         return PostSimpleDTO.builder()
@@ -149,7 +165,7 @@ public class PostServiceImpl implements PostService{
                 .title(post.getTitle())
                 .content(post.getContent())
                 .published(post.isPublished())
-                .username(post.getUser().getUsername())
+                .username(owner_username)
                 .createdAt(post.getCreatedAt())
                 .page(0)
                 .build();
@@ -162,16 +178,23 @@ public class PostServiceImpl implements PostService{
      * @info
      */
     @Override
-    public PostSimpleDTO getDetailPost(Integer postId, int page) {
+    public PostSimpleDTO getDetailPost(Integer postId, int page, String logined_username, boolean isAdmin) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
+
+        String owner_username = post.getUser().getUsername();
+
+        // 비공개글이면
+        if (!post.isPublished()) {
+            checkIfPostOwnerOrAdmin(owner_username, logined_username, isAdmin);
+        }
 
         return PostSimpleDTO.builder()
                 .postId(post.getPostId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .published(post.isPublished())
-                .username(post.getUser().getUsername())
+                .username(owner_username)
                 .createdAt(post.getCreatedAt())
                 .page(page)
                 .build();
@@ -231,19 +254,13 @@ public class PostServiceImpl implements PostService{
         return new PostListDTO(postPage, keyword);
     }
 
-    @Override
-    public boolean checkPostOwner(Integer postId, String logined_username) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
+    private void checkIfPostOwnerOrAdmin(String owner_username, String logined_username, boolean isAdmin) {
+        // 사용자 = 작성자 또는 어드민
+        if(owner_username.equals(logined_username) || isAdmin) {
+            return;
+        }
 
-        return post.getUser().getUsername().equals(logined_username);
+        throw new AccessDeniedException("you are not allowed to access this post");
     }
 
-    @Override
-    public boolean isPostPublished(Integer postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
-
-        return post.isPublished();
-    }
 }

@@ -3,6 +3,7 @@ package com.example.actionprice.customerService.comment;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,11 +46,11 @@ public class CommentController {
             @PathVariable("postId") int postId,
             @RequestBody Map<String, String> requestBody
     ) {
-        String logined_username = getUsernameWithPrincipal();
-        String content = requestBody.get("content");
-        log.info("[class] CommentController - [method] createComment - logined_username : {} | content : {}", logined_username, content);
 
-        return commentService.createComment(postId, logined_username, content);
+        String content = requestBody.get("content");
+        log.info("[class] CommentController - [method] createComment - content : {}", content);
+
+        return commentService.createComment(postId, getUsernameWithPrincipal(), content);
     }
 
     /**
@@ -66,7 +67,7 @@ public class CommentController {
      * 여기서 PostDetail을 반환하기에는 과정도 번거롭고 낭비가 많음
      * 차라리 postId만 반환하고 그 postId 가지고 리다이렉트해서 기존의 PostDetail에 대한 GetMapping으로 처리하게 두는 게 편하고 효율적임.
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN') or @commentServiceImpl.checkCommentOwner(#commentId, authentication.principal.getUsername())")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{postId}/detail/{commentId}/update")
     public CommentSimpleDTO updateComment(
             @PathVariable("postId") int postId,
@@ -76,14 +77,13 @@ public class CommentController {
         String content = requestBody.get("content");
         log.info("[class] CommentController - [method] updateComment - content : {}",  content);
 
-        return commentService.updateComment(commentId, content);
+        return commentService.updateComment(commentId, content, getUsernameWithPrincipal());
     }
 
     /**
      * 댓글 삭제 기능
      * @param postId 당연히 PostDetail에서 댓글 추가/수정/삭제 등이 있을 테니, path에 이미 포함되어 있을 거임. 여기선 용도가 없이 그냥 경로 지정용
      * @param commentId 어떤 댓글을 삭제하려고 하는 지 파악하기 위한 용도
-     * @param requestBody "logined_username"가 맵 형태로 전달되어야 함
      * @value logined_username : 로그인 된 username
      * @author 연상훈
      * @created 2024-10-27 오후 12:14
@@ -94,20 +94,18 @@ public class CommentController {
      * 이것도 리다이렉트 시키게 postId로 줄 것인지 아니면 그냥 이렇게 결과만 줄 지는 고민 중.
      * 이미 삭제된 comment 다시 삭제 못 하게 리다이렉트하는 게 좋을 것 같기는데 한데
      */
-    @PreAuthorize("hasRole('ROLE_ADMIN') or @commentServiceImpl.checkCommentOwner(#commentId, authentication.principal.getUsername())")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{postId}/detail/{commentId}/delete")
     public CommentSimpleDTO deleteComment(
             @PathVariable("postId") int postId,
-            @PathVariable("commentId") int commentId,
-            @RequestBody Map<String, String> requestBody
+            @PathVariable("commentId") int commentId
     ) throws IllegalAccessException {
-        String logined_username = requestBody.get("username");
-        log.info("[class] CommentController - [method] deleteComment - logined_username : {}", logined_username);
+        log.info("[class] CommentController - [method] deleteComment");
 
-        return commentService.deleteComment(commentId);
+        return commentService.deleteComment(commentId, getUsernameWithPrincipal());
     }
 
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Secured("ROLE_ADMIN")
     @GetMapping("/{postId}/comment/admin/{answertype}")
     public String getAnswer(
         @PathVariable("postId") int postId,
