@@ -37,6 +37,7 @@ public class MyPageServiceImpl implements MyPageService {
      */
     @Override
     public Map<String, String> getPersonalInfo(String username) {
+        log.info("[class] MyPageServiceImpl - [method] getPersonalInfo > 실행");
         User user = userRepository.findById(username)
             .orElseThrow(() -> new UserNotFoundException("user(" + username + ") does not exist"));
 
@@ -54,6 +55,7 @@ public class MyPageServiceImpl implements MyPageService {
      */
     @Override
     public void deleteUser(String username) {
+        log.info("[class] MyPageServiceImpl - [method] deleteUser > 실행");
         User user = userRepository.findById(username)
             .orElseThrow(() -> new UserNotFoundException("user(" + username + ") does not exist"));
 
@@ -70,6 +72,7 @@ public class MyPageServiceImpl implements MyPageService {
      */
     @Override
     public PostListDTO getMyPosts(String username, String keyword, int pageNum) {
+        log.info("[class] MyPageServiceImpl - [method] getMyPosts > 실행");
 
         return postService.getPostListForMyPage(username, keyword, pageNum);
     }

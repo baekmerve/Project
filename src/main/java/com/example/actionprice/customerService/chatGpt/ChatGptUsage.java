@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * @author 연상훈
+ * @created 2024-11-08 오전 1:06
+ */
 @Getter
 @Setter
 public class ChatGptUsage {

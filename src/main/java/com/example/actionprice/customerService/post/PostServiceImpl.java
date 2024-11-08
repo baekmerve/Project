@@ -179,6 +179,13 @@ public class PostServiceImpl implements PostService{
      */
     @Override
     public PostSimpleDTO getDetailPost(Integer postId, int page, String logined_username, boolean isAdmin) {
+        log.info(
+                "[class] PostServiceImpl - [method] getDetailPost - postId : {} | logined_username : {} | isAdmin : {}",
+                postId,
+                logined_username,
+                isAdmin
+        );
+
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
 
@@ -186,6 +193,7 @@ public class PostServiceImpl implements PostService{
 
         // 비공개글이면
         if (!post.isPublished()) {
+            log.info("비공개글입니다.");
             checkIfPostOwnerOrAdmin(owner_username, logined_username, isAdmin);
         }
 
@@ -238,6 +246,7 @@ public class PostServiceImpl implements PostService{
      */
     @Override
     public PostListDTO getPostListForMyPage(String username, String keyword, Integer pageNum) {
+        log.info("[class] PostServiceImpl - [method] getPostList > 실행");
         log.info("[class] PostServiceImpl - [method] getPostList - page : {} | keyword : {}", pageNum, keyword);
         Pageable pageable = PageRequest.of(pageNum, 10, Sort.by(Sort.Order.desc("postId")));
         Page<Post> postPage = null;
@@ -251,14 +260,19 @@ public class PostServiceImpl implements PostService{
             postPage = postRepository.findByUser_UsernameAndTitleContaining(username, keyword, pageable);
         }
 
+        log.info("[class] PostServiceImpl - [method] getPostList > 완료");
+
         return new PostListDTO(postPage, keyword);
     }
 
     private void checkIfPostOwnerOrAdmin(String owner_username, String logined_username, boolean isAdmin) {
         // 사용자 = 작성자 또는 어드민
         if(owner_username.equals(logined_username) || isAdmin) {
+            log.info("인증 완료");
             return;
         }
+
+        log.info("인증 실패");
 
         throw new AccessDeniedException("you are not allowed to access this post");
     }

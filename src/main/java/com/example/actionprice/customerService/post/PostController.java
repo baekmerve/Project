@@ -70,9 +70,11 @@ public class PostController {
             logined_username = getUsernameWithPrincipal();
             isAdmin = isLoginedUserAdmin();
         } catch (Exception e) {
-            log.error(e);
+            log.info("로그인 하지 않은 사용자가 게시글에 접근함");
+            log.info(e.getMessage());
         }
 
+        log.info("로그인 한 사용자가 게시글에 접근함. logined_username : {}", logined_username);
         return postService.getDetailPost(postId, page, logined_username, isAdmin);
     }
 

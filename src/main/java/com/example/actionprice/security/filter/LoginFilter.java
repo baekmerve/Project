@@ -1,7 +1,6 @@
 package com.example.actionprice.security.filter;
 
 import com.example.actionprice.exception.UserNotFoundException;
-import com.example.actionprice.handler.LoginSuccessHandler;
 import com.example.actionprice.security.CustomUserDetailService;
 import com.example.actionprice.user.User;
 import com.example.actionprice.user.UserRepository;
@@ -19,6 +18,8 @@ import java.time.LocalDateTime;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -36,7 +37,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
  * 그리고 로그인 성공 시의 로직을 SuccessHandler로 분리
  * @value userDetailService
  * @value successHandler
- * @info 생성자에 super를 써야 해서 @AllArgs 못 씀
+ * @value userRepository
  */
 @Log4j2
 public class LoginFilter extends AbstractAuthenticationProcessingFilter {
@@ -86,7 +87,6 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
       return null;
     }
-
     
     UserLoginForm loginForm = parseRequestJSON(request, UserLoginForm.class);
 
@@ -140,8 +140,17 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
    */
   @Override
   protected void unsuccessfulAuthentication(HttpServletRequest request,
-      HttpServletResponse response, AuthenticationException failed) {
+      HttpServletResponse response, AuthenticationException failed) throws IOException {
     log.info("[class] LoginFilter - [method] unsuccessfulAuthentication > 로그인 실패");
+
+    // 계정 잠금 상태인 걸로 실패한 거면 빠르게 끝냄
+    if(failed instanceof LockedException){
+      log.info("계정 잠금 상태입니다.");
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.getWriter().println("[loginFailure] Your account have been locked for 5 minutes");
+      log.info("[class] LoginFilter - [method] unsuccessfulAuthentication > 종료");
+      return;
+    }
 
     String username = (String)request.getAttribute("username");
     log.info("[class] LoginFilter - [method] successfulAuthentication > username : {}", username);
@@ -151,13 +160,24 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     User user = userRepository.findById(username).orElse(null);
     if(user == null) {
+      log.info("존재하지 않는 사용자입니다.");
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.getWriter().println("[loginFailure] Incorrect username");
+      log.info("[class] LoginFilter - [method] unsuccessfulAuthentication > 종료");
       return;
     }
 
+    log.info("존재하는 사용자입니다.");
+
     int loginFailureCount = user.getLoginFailureCount()+1;
+    StringBuilder responseMessage = new StringBuilder();
+    responseMessage.append("Incorrect password. Current failure count : ");
+    responseMessage.append(loginFailureCount);
 
     // 실패횟수가 5 이상이면
     if(loginFailureCount >= 5) {
+      log.info("실패횟수가 5회 이상입니다. 계정 잠금 처리 및 실패횟수 초기화를 진행합니다.");
+      responseMessage.append(" | Login failed more than 5 times. Your account will be locked for 5 minutes.");
       // 계정 잠금처리
       user.setLockedAt(LocalDateTime.now());
       // 실패횟수를 놔두면 무한히 잠금 시간이 갱싱될 수 있으니 초기화 해줌
@@ -167,7 +187,10 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     user.setLoginFailureCount(loginFailureCount);
     userRepository.save(user);
+    log.info("로그인 실패 횟수를 갱신합니다. 현재 {}회입니다.", loginFailureCount);
 
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+    response.getWriter().println(responseMessage.toString());
     log.info("[class] LoginFilter - [method] unsuccessfulAuthentication > 종료");
   }
 

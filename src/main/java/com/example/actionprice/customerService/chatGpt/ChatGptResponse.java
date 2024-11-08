@@ -5,6 +5,10 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * @author 연상훈
+ * @created 2024-11-08 오전 1:05
+ */
 @Getter
 @Setter
 public class ChatGptResponse {

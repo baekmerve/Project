@@ -4,7 +4,6 @@ import com.example.actionprice.customerService.post.dto.PostListDTO;
 import com.example.actionprice.user.UserRole;
 import com.example.actionprice.user.favorite.FavoriteService;
 import com.example.actionprice.user.favorite.FavoriteSimpleDTO;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.AccessDeniedException;
@@ -45,6 +44,7 @@ public class MyPageController {
     public Map<String, String> goPersonalInfo(
         @PathVariable("username") String username
     ) {
+        log.info("[class] MyPageController - [method] goPersonalInfo > 실행");
         checkQualification(username);
         return myPageService.getPersonalInfo(username);
     }
@@ -62,6 +62,7 @@ public class MyPageController {
              @RequestParam(required = false, name = "keyword") String keyword,
              @RequestParam(required = false, name = "pageNum", defaultValue = "0") int pageNum)
     {
+        log.info("[class] MyPageController - [method] goMyPosts > 실행");
         checkQualification(username);
         return myPageService.getMyPosts(username, keyword, pageNum);
     }
@@ -75,6 +76,7 @@ public class MyPageController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/{username}/wishlist")
     public List<FavoriteSimpleDTO> getMyWishlist(@PathVariable("username") String username) {
+        log.info("[class] MyPageController - [method] getMyWishlist > 실행");
         checkQualification(username);
         return favoriteService.getFavoriteList(username);
     }
@@ -88,6 +90,7 @@ public class MyPageController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/{username}/deleteUser")
     public String deleteUser(@PathVariable("username") String username){
+        log.info("[class] MyPageController - [method] deleteUser > 실행");
         checkQualification(username);
         myPageService.deleteUser(username);
 

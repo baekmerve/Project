@@ -58,8 +58,6 @@ public class CustomUserDetailService implements UserDetailsService {
         if(LocalDateTime.now().isBefore(accountLockedAt.plusMinutes(5))) {
           isAccountNonLocked = false;
         }
-
-        // 로그인 실패 기록은 로그인 성공하면 지워짐
       }
 
       return new org.springframework.security.core.userdetails.User(

@@ -10,6 +10,11 @@ import lombok.Getter;
 import lombok.ToString;
 import org.springframework.data.domain.Page;
 
+/**
+ * 사용자 리스트를 반환할 때 사용하는 dto
+ * @author 연상훈
+ * @created 2024-11-07 오후 11:22
+ */
 @Getter
 @ToString
 public class UserListDTO {

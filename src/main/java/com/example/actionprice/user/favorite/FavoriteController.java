@@ -26,7 +26,6 @@ public class FavoriteController {
 
   private final FavoriteService favoriteService;
 
-  // principal을 쓸까 그냥 요청으로 받을까
   @PreAuthorize("isAuthenticated()")
   @PostMapping("/{large}/{middle}/{small}/{rank}/favorite")
   public FavoriteSimpleDTO createFavorite(
@@ -36,6 +35,8 @@ public class FavoriteController {
       @PathVariable("rank") String rank,
       @RequestBody Map<String, String> requestBody
   ){
+    log.info("[class] FavoriteController - [method] createFavorite 실행");
+
     String logined_username = getUsernameWithPrincipal();
     String favorite_name = requestBody.get("favorite_name");
 
@@ -51,13 +52,16 @@ public class FavoriteController {
 
   @PostMapping("/favorite/{favoriteId}/delete")
   public Map<String, Object> deleteFavorite(@PathVariable("favoriteId") Integer favoriteId){
+    log.info("[class] deleteFavorite - [method] deleteFavorite > 실행");
 
     boolean isDeleted = favoriteService.deleteFavorite(favoriteId, getUsernameWithPrincipal(), isLoginedUserAdmin());
 
     if(isDeleted){
+      log.info("[class] deleteFavorite - [method] deleteFavorite - 성공");
       return Map.of("status", "success", "favoriteId", favoriteId);
     }
 
+    log.info("[class] deleteFavorite - [method] deleteFavorite - 실패");
     return Map.of("status", "failure", "favoriteId", favoriteId);
   }
 

@@ -39,13 +39,13 @@ import java.util.Arrays;
 
 /**
  * 보안 관련된 거의 모든 설정이 있는 곳
- * @info 토큰관련 로직이 추가로 더 필요하긴 함. 필요한 것만 보안을 열어뒀으니 상황에 따라 추가해야 함
  * @author 연상훈
  * @created 24/10/01 13:46
  * @updated 24/10/14 05:26 LoginSuccessHandler가 rememberMe 토큰 생성을 막고 있어서 제거. 그것을 대체하는 LoginFilter - successfulAuthentication 생성함
  * @updated 2024-10-14 오후 12:05 LoginSuccessHandler가 없으면 또 로그인에 문제 생겨서 다시 생성함. 그리고 대부분의 객체를 Bean으로 관리하도록 수정
  * @updated 2024-10-17 오후 7:15 : 리멤버미 삭제
  * @updated 2024-10-19 오후 5:19 : logoutSuccessHandler 추가. jwtUtil을 RefreshTokenService로 통합. RefreshTokenService 안에 jwtUtil 있음
+ * @updated 2024-11-07 오후 11:30 : 보안을 적극적으로 적용하면서 대폭 수정. url path 수정, 필터 수정 등
  */
 @SuppressWarnings("ALL")
 @Configuration
@@ -58,12 +58,17 @@ public class CustomSecurityConfig {
     private final CustomUserDetailService userDetailsService;
     private final UserRepository userRepository;
     private final AccessTokenService accessTokenService;
-
-    // method - @Bean
+    
     /**
      * @author : 연상훈
      * @created : 2024-10-05 오후 9:27
-     * @updated 2024-10-14 오전 5:38 : 리멤버미 사용을 위해 일부 수정.
+     * @info component나 configuration으로 등록하기엔 자잘한 것들을 여기서 bean으로 설정해서 관리함 
+     * @info 세션 비활성화
+     * @info cors 활성화
+     * @info accessDeniedHandler - 접근 거절 시 리다이렉트 비활성화
+     * @info 토큰 필터 순서에 주의. 리프레시 토큰 필터 > 토큰 체크 필터 > 로그인/로그아웃 필터 > UsernamePasswordAuthenticationFilter
+     * @info 폼로그인 비활성화 - 접근 거절 시 리다이렉트 비활성화
+     * @info 요청 url path 설정에 주의
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -75,7 +80,12 @@ public class CustomSecurityConfig {
 
       http.sessionManagement(sessionPolicy -> sessionPolicy.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource())) // corsConfigurationSource
-          .csrf((csrfconfig) -> csrfconfig.disable())
+          .csrf((csrfconfig) -> csrfconfig.disable()).exceptionHandling(exceptionHandler -> {
+            // accessDeniedHandler가 리다이렉트하지 않도록 만들어서 인증 실패 후 계속 이상한 곳으로 요청 보내지 않도록 함
+              exceptionHandler.accessDeniedHandler(((request, response, accessDeniedException) -> {
+                  response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+              }));
+              })
           .authorizeHttpRequests((authz) -> authz
                       .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                       .requestMatchers(
@@ -92,7 +102,6 @@ public class CustomSecurityConfig {
                           "/api/post/*/delete",
                           "/api/post/*/update/*",// 게시글 생성, 수정, 삭제
                           "/api/mypage/**", // 마이페이지(개인정보 열람, 내 게시글 목록, 내 즐겨찾기 목록, 사용자 삭제)
-                          "/api/post/*/detail/**", // 게시글 내 댓글 생성, 수정, 삭제
                           "/api/category/favorite/**", // 즐겨찾기 삭제
                           "/api/category/*/*/*/*/favorite" // 즐겨찾기 생성
                       ).authenticated() // 로그인을 한 사람만 이동 가능
@@ -114,7 +123,7 @@ public class CustomSecurityConfig {
           .addFilterBefore(tokenCheckFilter(), UsernamePasswordAuthenticationFilter.class)
           .addFilterBefore(refreshTokenFilter(), TokenCheckFilter.class)
           .addFilterBefore(loginFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
-          .addFilterBefore(logoutFilter(), UsernamePasswordAuthenticationFilter.class) // 필터 순서에 주의
+          .addFilterBefore(logoutFilter(), UsernamePasswordAuthenticationFilter.class) // 필터 순서에 주의. 기본적으로 나중에 입력한 것일수록 뒤에 실행됨
           .formLogin((formLogin) -> formLogin.disable());
       return http.build();
 
@@ -130,6 +139,14 @@ public class CustomSecurityConfig {
       return authenticationManagerBuilder.build();
     }
 
+    /**
+     * 로그인 필터. 로그인 절차를 임의로 수정하기 위해서 필요함
+     * @author 연상훈
+     * @created 2024-11-07 오후 11:37
+     * @info 인증을 위해서 userDetailsService와 authenticationManager는 필수
+     * @info 로그인 후의 로직을 임의로 구성하려면 loginSuccessHandler 필요
+     * @info userRepository는 로그인 실패 횟수 체크하려고 쓰는 것
+     */
     @Bean
     LoginFilter loginFilter(AuthenticationManager authenticationManager) throws Exception {
       return new LoginFilter(
@@ -143,8 +160,7 @@ public class CustomSecurityConfig {
 
     @Bean
     public LoginSuccessHandler loginSuccessHandler(){
-      LoginSuccessHandler loginSuccessHandler = new LoginSuccessHandler(accessTokenService);
-      return loginSuccessHandler;
+      return new LoginSuccessHandler(accessTokenService);
     }
 
     @Bean
@@ -182,22 +198,31 @@ public class CustomSecurityConfig {
         return new TokenCheckFilter(userDetailsService, accessTokenService);
     }
 
-  @Bean
-  public LogoutFilter logoutFilter() {
-    SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
-    LogoutSuccessHandler logoutSuccessHandler = new LogoutSuccessHandler() {
-      @Override
-      public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-          SecurityContextHolder.clearContext();
-          log.info("----------------- 로그아웃 ----------------------");
-          response.setStatus(HttpServletResponse.SC_OK);  // 200 OK 응답
-          response.getWriter().write("logout success");  // JSON 응답
-      }
-    };
-
-    LogoutFilter logoutFilter = new LogoutFilter(logoutSuccessHandler, logoutHandler);
-    logoutFilter.setFilterProcessesUrl("/api/user/logout");
-
-    return logoutFilter;
-  }
+    /**
+     * 로그아웃 필터
+     * @author 연상훈
+     * @created 2024-11-08 오전 1:01
+     * @info 스프링부트 세큐리티에서 로그아웃 필터는 기본적으로 거의 맨 앞에 배치함
+     * > 지금 세션은 사용하지 않고 토큰으로만 인증하기 때문에 거의 맨 앞이면 토큰 인증을 못 받음
+     * > 필터 순서를 토큰 필터 뒤로 옮기려고 생성한 필터
+     * @info 로그아웃 후 별도의 리다이렉트가 없고, 인증 정보를 모두 삭제하도록 구성함
+     */
+    @Bean
+    public LogoutFilter logoutFilter() {
+      SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+      LogoutSuccessHandler logoutSuccessHandler = new LogoutSuccessHandler() {
+        @Override
+        public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+            SecurityContextHolder.clearContext();
+            log.info("----------------- 로그아웃 ----------------------");
+            response.setStatus(HttpServletResponse.SC_OK);  // 200 OK 응답
+            response.getWriter().write("logout success");  // JSON 응답
+        }
+      };
+  
+      LogoutFilter logoutFilter = new LogoutFilter(logoutSuccessHandler, logoutHandler);
+      logoutFilter.setFilterProcessesUrl("/api/user/logout");
+  
+      return logoutFilter;
+    }
 }

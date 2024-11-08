@@ -6,13 +6,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AccountExpiredException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -105,6 +111,7 @@ public class CustomRestAdvice {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
 
+  // comment 가 없을 시
   @ExceptionHandler(CommentNotFoundException.class)
   @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
   public ResponseEntity<String> handlerCommentNotFoundException(CommentNotFoundException e) {
@@ -123,12 +130,24 @@ public class CustomRestAdvice {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
 
-  // 부정 접근 시
+  // 부정 접근(권한 없는 접근) 시
   @ExceptionHandler({AccessDeniedException.class, InsufficientAuthenticationException.class})
   @ResponseStatus(HttpStatus.FORBIDDEN)
   public ResponseEntity<String> handlerAccessDeniedException(Exception e) {
-    log.error(e.getMessage());
     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
   }
-  
+
+  @ExceptionHandler(AccessTokenException.class)
+  public void handlerAccessTokenException(AccessTokenException e, HttpServletResponse response) {
+    // AccessTokenException의 sendResponseError 메서드 호출
+    // 얘는 이미 내부에 응답을 하는 메서드가 구현되어 있음
+    e.sendResponseError(response);
+  }
+
+  @ExceptionHandler(RefreshTokenException.class)
+  public void handlerRefreshTokenException(RefreshTokenException e, HttpServletResponse response) {
+    // AccessTokenException의 sendResponseError 메서드 호출
+    // 얘는 이미 내부에 응답을 하는 메서드가 구현되어 있음
+    e.sendResponseError(response);
+  }
 }
