@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class HomeServiceImpl implements HomeService {
 
   // 이미지들을 static에 다 저장하고 경로를 입력해야 함
+  // 홈페이지에 반환할 이미지들의 경로
   private final String[] imagePaths = {
       "static/image/cookie.jpg",
       "static/image/egg.jpg",
@@ -23,6 +24,11 @@ public class HomeServiceImpl implements HomeService {
       "static/image/salted.jpg",
   };
 
+  /**
+   * 홈페이지에서 사용할 이미지를 인코딩해서 반환하는 fetch 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오전 11:05*
+   */
   @Override
   public Map<String, String> fetchImages() throws IOException {
     Map<String, String> images = new HashMap<>();

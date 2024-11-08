@@ -1,7 +1,6 @@
 package com.example.actionprice.user;
 
-import com.example.actionprice.admin.UserListDTO;
-import com.example.actionprice.exception.UserNotFoundException;
+import com.example.actionprice.user.dto.UserListDTO;
 import com.example.actionprice.user.forms.UserRegisterForm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

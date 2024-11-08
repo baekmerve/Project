@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
 /**
+ * 엑세스 토큰 에러
  * @author : 연상훈
  * @created : 2024-10-06 오후 2:57
  * @updated 2024-10-17 오후 7:42 : 상태코드 숫자 수정

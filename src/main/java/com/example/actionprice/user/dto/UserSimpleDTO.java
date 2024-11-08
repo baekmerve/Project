@@ -1,4 +1,4 @@
-package com.example.actionprice.admin;
+package com.example.actionprice.user.dto;
 
 import java.time.LocalDateTime;
 import lombok.Builder;

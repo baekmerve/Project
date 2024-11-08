@@ -20,6 +20,11 @@ public class HomeController {
 
     private final HomeService homeService;
 
+    /**
+     * 홈페이지에서 사용할 이미지를 인코딩해서 반환하는 메서드
+     * @author 연상훈
+     * @created 2024-11-08 오전 11:05* 
+     */
     @GetMapping("/")
     public Map<String, Object> fetchHomeImages() {
         log.info("fetch images");

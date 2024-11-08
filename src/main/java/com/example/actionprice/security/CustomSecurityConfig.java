@@ -1,7 +1,6 @@
-package com.example.actionprice.config;
+package com.example.actionprice.security;
 
-import com.example.actionprice.handler.LoginSuccessHandler;
-import com.example.actionprice.security.CustomUserDetailService;
+import com.example.actionprice.security.handler.LoginSuccessHandler;
 import com.example.actionprice.security.filter.LoginFilter;
 import com.example.actionprice.security.filter.RefreshTokenFilter;
 import com.example.actionprice.security.filter.TokenCheckFilter;

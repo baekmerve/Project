@@ -97,33 +97,35 @@ public class CustomRestAdvice {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
 
-  //user 가 없을 시
+  // 부정한 방법으로 존재하지 않는 user 조회 시 발생하는 에러
   @ExceptionHandler(UserNotFoundException.class)
   @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
   public ResponseEntity<String> handlerUserNotFoundException(UserNotFoundException e) {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
 
-  //post 가 없을 시
+  // 부정한 방법으로 존재하지 않는 post 조회 시 발생하는 에러
   @ExceptionHandler(PostNotFoundException.class)
   @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
   public ResponseEntity<String> handlerPostNotFoundException(PostNotFoundException e) {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
 
-  // comment 가 없을 시
+  // 부정한 방법으로 존재하지 않는 댓글 조회 시 발생하는 에러
   @ExceptionHandler(CommentNotFoundException.class)
   @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
   public ResponseEntity<String> handlerCommentNotFoundException(CommentNotFoundException e) {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
-  
+
+  // 엑셀 파일로 다운 받을 때, 지정한 조건에 맞는 데이터가 없을 시
   @ExceptionHandler(TransactionDataNotFoundException.class)
   @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
   public ResponseEntity<String> handlerTransactionDataNotFoundException(TransactionDataNotFoundException e) {
     return ResponseEntity.badRequest().body(e.getMessage());
   }
 
+  // 존재하지 않는 카테고리를 부정한 방법으로 조회 시
   @ExceptionHandler(InvalidCategoryException.class)
   @ResponseStatus(HttpStatus.EXPECTATION_FAILED)
   public ResponseEntity<String> handlerInvalidCategoryException(InvalidCategoryException e) {
@@ -137,6 +139,7 @@ public class CustomRestAdvice {
     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
   }
 
+  // 엑세스 토큰 에러
   @ExceptionHandler(AccessTokenException.class)
   public void handlerAccessTokenException(AccessTokenException e, HttpServletResponse response) {
     // AccessTokenException의 sendResponseError 메서드 호출
@@ -144,6 +147,7 @@ public class CustomRestAdvice {
     e.sendResponseError(response);
   }
 
+  // 리프레시 토큰 에러
   @ExceptionHandler(RefreshTokenException.class)
   public void handlerRefreshTokenException(RefreshTokenException e, HttpServletResponse response) {
     // AccessTokenException의 sendResponseError 메서드 호출

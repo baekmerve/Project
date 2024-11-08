@@ -1,6 +1,6 @@
 package com.example.actionprice.user;
 
-import com.example.actionprice.admin.UserListDTO;
+import com.example.actionprice.user.dto.UserListDTO;
 import com.example.actionprice.user.forms.UserRegisterForm;
 
 public interface UserService {

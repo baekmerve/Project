@@ -97,6 +97,14 @@ public class MyPageController {
         return "delete user : success";
     }
 
+    /**
+     * 로그인한 사용자가 마이페이지에 접근할 자격이 있는지 확인하는 메서드
+     * @throws AccessDeniedException
+     * @author 연상훈
+     * @created 2024-11-08 오전 11:07
+     * @info 마이페이지 주인 or 어드민만 접근 가능
+     * @info 권한 없으면 예외 발생
+     */
     private void checkQualification(String username){
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 

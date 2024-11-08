@@ -1,4 +1,4 @@
-package com.example.actionprice.admin;
+package com.example.actionprice.user.dto;
 
 import com.example.actionprice.security.jwt.refreshToken.RefreshTokenEntity;
 import com.example.actionprice.user.User;

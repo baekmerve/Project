@@ -1,4 +1,4 @@
-package com.example.actionprice.handler;
+package com.example.actionprice.security.handler;
 
 import com.example.actionprice.security.jwt.accessToken.AccessTokenService;
 import jakarta.servlet.FilterChain;
