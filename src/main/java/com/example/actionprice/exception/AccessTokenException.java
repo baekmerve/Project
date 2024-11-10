@@ -1,9 +1,6 @@
 package com.example.actionprice.exception;
 
-import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletResponse;
-import java.util.Date;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
@@ -13,6 +10,7 @@ import org.springframework.http.MediaType;
  * @created : 2024-10-06 오후 2:57
  * @updated 2024-10-17 오후 7:42 : 상태코드 숫자 수정
  * @updated 2024-10-19 오후 5:17 : 블랙리스트 기능 구현을 위해 TOKEN_ERROR에 BLOCKED 추가
+ * @see : 이것의 에러는 e.sendResponseError(response); 이렇게만 처리해줘도 됨
  */
 public class AccessTokenException extends RuntimeException {
 
@@ -27,19 +25,19 @@ public class AccessTokenException extends RuntimeException {
     BADSIGN(HttpStatus.FORBIDDEN, "Bad Signature Token");
 
     private HttpStatus status;
-    private String msg;
+    private String message;
 
-    TOKEN_ERROR(HttpStatus status, String msg) {
+    TOKEN_ERROR(HttpStatus status, String message) {
       this.status = status;
-      this.msg = msg;
+      this.message = message;
     }
 
     public HttpStatus getStatus() {
       return status;
     }
 
-    public String getMsg() {
-      return msg;
+    public String getMessage() {
+      return message;
     }
   }
 
@@ -50,17 +48,10 @@ public class AccessTokenException extends RuntimeException {
 
   public void sendResponseError(HttpServletResponse response) {
 
-    response.setStatus(token_error.getStatus().value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-    Gson gson = new Gson();
-    String responseStr = gson.toJson(
-        Map.of("msg", token_error.getMsg(),
-            "time", new Date())
-    );
-
     try{
-      response.getWriter().println(responseStr);
+      response.sendError(token_error.getStatus().value(), token_error.getMessage());
     }
     catch(Exception e){
       throw new RuntimeException(e);

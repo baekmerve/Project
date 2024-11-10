@@ -146,6 +146,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     if(oldRefreshToken != null) {
       user.setRefreshToken(null);
       refreshTokenRepository.delete(oldRefreshToken);
+      refreshTokenRepository.flush(); // 이것을 즉시 반영함
     }
 
     RefreshTokenEntity refreshTokenEntity = RefreshTokenEntity.builder()

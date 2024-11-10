@@ -1,6 +1,5 @@
 package com.example.actionprice.auctionData.repository;
 
-import com.example.actionprice.auctionData.entity.AuctionEntity_ani;
 import com.example.actionprice.auctionData.entity.AuctionEntity_foodCrops;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

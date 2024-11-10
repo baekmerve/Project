@@ -1,7 +1,6 @@
 package com.example.actionprice.security.jwt;
 
 import com.example.actionprice.user.User;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -14,7 +13,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-// TODO exception 처리를 구체화할 필요가 있음
 /**
  * @author : 연상훈
  * @created : 2024-10-06 오후 2:12
@@ -56,7 +54,7 @@ public class JWTUtil {
   }
 
   /**
-   * 토큰 검증
+   * 토큰 검증 후 토큰 소유자의 username을 반환
    * @param token : 토큰 내용 [String]
    * @author : 연상훈
    * @created : 2024-10-06 오후 2:35

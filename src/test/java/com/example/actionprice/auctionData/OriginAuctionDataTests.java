@@ -32,15 +32,19 @@ public class OriginAuctionDataTests {
         String reponseBody = originAuctionDataFetcher.getAuctionData_String("1101", "2024-10-20", "100");
         System.out.println(reponseBody);
     }
-
-
+    
+    /**
+     * @author 연상훈
+     * @created 2024-11-09 오후 11:19
+     * @info 7~9일 데이터 받음
+     */
     @Test
     void auctionDataFluxTest() throws Exception {
         String year = "2024";
         String month = "11";
-        int endDay = 5;
+        int endDay = 9;
 
-        for (int i = 5; i <= endDay; i++) {
+        for (int i = 7; i <= endDay; i++) {
             // 날짜 형식 맞추기
             String day = String.format("%02d", i);
             String date = String.format("%s-%s-%s", year, month, day);

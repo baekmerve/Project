@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OriginAuctionDataRow {
 
-
     @JsonProperty("item_name")
     private String item_name; // 품목명
 

@@ -2,8 +2,10 @@ package com.example.actionprice.auctionData.controller;
 
 import com.example.actionprice.auctionData.dto.CategoryResultDTO;
 import com.example.actionprice.auctionData.dto.CategoryDTO;
+import com.example.actionprice.auctionData.dto.ChartDataDTO;
 import com.example.actionprice.auctionData.entity.AuctionBaseEntity;
 import com.example.actionprice.auctionData.service.AuctionCategoryService;
+import com.example.actionprice.auctionData.service.AuctionEntityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,13 +19,14 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/category") //수정할거
+@RequestMapping("/api/category")
 @Log4j2
 public class AuctionCategoryController {
 
     private final AuctionCategoryService auctionCategoryService;
+    private final AuctionEntityService auctionEntityService;
 
-    @GetMapping("/{large}") //이런것들도
+    @GetMapping("/{large}")
     public CategoryDTO getCategoriesByLarge(@PathVariable String large) {
         log.info("[class] AuctionCategoryController - [method] getCategoriesByLarge - large : {}", large);
         return auctionCategoryService.getMiddleCategory(large);
@@ -67,9 +70,49 @@ public class AuctionCategoryController {
             // 기본값으로 오늘 날짜로 설정
             startDate = today;
         }
-        return auctionCategoryService.getCategoryAndPage(large, middle, small, rank,startDate, endDate, pageNum);
+
+        return auctionEntityService.getCategoryAndPage(
+            large,
+            middle,
+            small,
+            rank,
+            startDate,
+            endDate,
+            pageNum
+        );
     }
 
+    @GetMapping("/{large}/{middle}/{small}/{rank}/gragh")
+    public ChartDataDTO getPriceDataWithGragh(
+        @PathVariable String large,
+        @PathVariable String middle,
+        @PathVariable String small,
+        @PathVariable String rank,
+        @RequestParam(value = "startDate",required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+        @RequestParam(value = "endDate",required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
+    ) {
+        log.info("그래프 출력 시작");
+        LocalDate today = LocalDate.now();
+        LocalDate oneYearAgo = today.minusYears(1);
+        // 날짜 유효성 검사
+        if (endDate == null || endDate.isBefore(oneYearAgo)) {
+            endDate = today; // 기본값으로 오늘 날짜로 설정
+        }
+        if (startDate == null  || startDate.isBefore(oneYearAgo) || startDate.isAfter(endDate)) {
+            // 기본값으로 오늘 날짜로 설정
+            startDate = today;
+        }
+
+        log.info("그래프 출력 완료");
+        return auctionEntityService.getChartData(
+            large,
+            middle,
+            small,
+            rank,
+            startDate,
+            endDate
+        );
+    }
 
     @GetMapping("/{large}/{middle}/{small}/{rank}/excel")
     public ResponseEntity<byte[]> downloadExcel(
@@ -91,15 +134,25 @@ public class AuctionCategoryController {
             startDate = today;
         }
         // 페이지 없이 데이터를 가져오는 서비스 메서드 호출
-        CategoryResultDTO resultDTO = auctionCategoryService.getCategory(large, middle, small, rank, startDate, endDate);
-        List<AuctionBaseEntity> categoryList = resultDTO.getCategoryList();
+        List<AuctionBaseEntity> transactionHistoryList =
+            auctionEntityService.fetchTransactionHistoryList(
+                large,
+                middle,
+                small,
+                rank,
+                startDate,
+                endDate
+            );
 
         // 엑셀 파일 생성
-        byte[] excelFile = auctionCategoryService.createExcelFile(categoryList);
+        byte[] excelFile = auctionEntityService.createExcelFile(transactionHistoryList);
 
         // Content-Disposition 헤더 설정
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Disposition", "attachment; filename=transaction_history.xlsx");
+        headers.add(
+            "Content-Disposition",
+            "attachment; filename=transaction_history.xlsx"
+        );
 
         return ResponseEntity.ok()
                 .headers(headers)

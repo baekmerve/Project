@@ -5,17 +5,25 @@ import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import java.time.LocalDate;
 
+/**
+ * 각 DB에 들어갈 엔티티의 베이스 엔티티
+ * @author 연상훈
+ * @created 2024-11-08 오후 2:46
+ * @info MappedSuperclass와 SuperBuilder로 엔티티 변환이 자유롭도록 함
+ */
 @MappedSuperclass
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@Setter
 @ToString
-public class AuctionBaseEntity {
+public class AuctionBaseEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,6 +50,4 @@ public class AuctionBaseEntity {
 
     @Column(nullable = true)
     private String del_unit; // 단위(중량 : kg 등)
-
-
 }

@@ -135,6 +135,11 @@ public class UserServiceImpl implements UserService {
     return false;
   }
 
+  /**
+   * 비밀번호 변경을 위해 username과 email을 모두 확인하는 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오후 2:45
+   */
   @Override
   public boolean checkUsernameAndEmailExists(String username, String email) {
 
@@ -151,6 +156,12 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  /**
+   * 사용자 리스트 반환 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오후 2:44
+   * @info 어드민 페이지에서 사용됨
+   */
   @Override
   public UserListDTO getUserList(String keyword, int pageNum) {
     log.info("[class] UsertServiceImpl - [method] getUserList -  - page : {} | keyword : {}", pageNum, keyword);
@@ -170,6 +181,12 @@ public class UserServiceImpl implements UserService {
     return listDTO;
   }
 
+  /**
+   * 비밀번호 변경 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오후 2:44
+   * @info 비밀번호 변경하면 로그인 실패 기록 초기화
+   */
   @Override
   public boolean changePassword(String username, String newPassword) {
     User user = userRepository.findById(username).orElse(null);

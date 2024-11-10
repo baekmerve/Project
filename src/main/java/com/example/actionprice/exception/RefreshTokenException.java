@@ -1,10 +1,6 @@
 package com.example.actionprice.exception;
 
-import com.google.gson.Gson;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Date;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 
@@ -13,6 +9,7 @@ import org.springframework.http.MediaType;
  * @author : 연상훈
  * @created : 2024-10-06 오후 2:58
  * @updated 2024-10-19 오후 5:17 : 블랙리스트 기능 구현을 위해 TOKEN_ERROR에 BLOCKED 추가
+ * @see : 이것의 에러는 e.sendResponseError(response); 이렇게만 처리해줘도 됨
  */
 public class RefreshTokenException extends RuntimeException {
 
@@ -51,17 +48,12 @@ public class RefreshTokenException extends RuntimeException {
 
   public void sendResponseError(HttpServletResponse response){
 
-    response.setStatus(HttpStatus.UNAUTHORIZED.value());
     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-    Gson gson = new Gson();
-
-    String responseStr = gson.toJson(Map.of("msg", errorCase.name(), "time", new Date()));
-
     try{
-      response.getWriter().print(responseStr);
+      response.sendError(errorCase.getStatus().value(), errorCase.message);
     }
-    catch(IOException e){
+    catch(Exception e){
       throw new RuntimeException(e);
     }
   }

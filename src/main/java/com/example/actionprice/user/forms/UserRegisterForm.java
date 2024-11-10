@@ -55,7 +55,7 @@ public class UserRegisterForm {
   private String verificationCode;
 
   // 검증 시 구분을 위한 그룹입니다. 실질적인 기능은 없습니다.
-  public interface CheckDuplicationOfUsernameGroup {}
-  public interface SendVerificationCodeGroup {}
-  public interface CheckValidityOfVerificationCodeGroup {}
+  public interface CheckDuplicationOfUsernameGroup {} // 유저네임 중복 체크 그룹
+  public interface SendVerificationCodeGroup {} // 인증코드 발송 그룹
+  public interface CheckValidityOfVerificationCodeGroup {} // 인증코드 검증 그룹
 }

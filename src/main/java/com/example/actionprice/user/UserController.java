@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -159,6 +158,13 @@ public class UserController {
     return ResponseEntity.status(HttpStatus.CONFLICT).body("the user does not exist");
   }
 
+  /**
+   * 비밀변호 변경 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오후 2:42
+   * @info 검증에 UserRegisterForm을 그대로 사용함
+   * @info 비밀번호 분실 상태일 수도 있으니 따로 보안은 걸지 않았음
+   */
   @PostMapping("/changePassword")
   public ResponseEntity<String> changePassword(@Valid @RequestBody UserRegisterForm userRegisterForm){
     log.info("[class] UserController - [method] changePassword");
@@ -173,7 +179,13 @@ public class UserController {
     return ResponseEntity.status(HttpStatus.CONFLICT).body("Changing password failed.");
   }
 
-  @PostMapping("/sendVerificationCodeForChangingPW") //요청을 json 타입으로 받음
+  /**
+   * 비밀번호 변경 시 인증코드 발송 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오후 2:43
+   * @info
+   */
+  @PostMapping("/sendVerificationCodeForChangingPW")
   public ResponseEntity<String> sendVerificationCodeForChangingPW(
           @Validated(UserRegisterForm.SendVerificationCodeGroup.class) @RequestBody UserRegisterForm userRegisterForm
   ) throws Exception {

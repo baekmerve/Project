@@ -80,6 +80,7 @@ public class AdminController {
   @Secured("ROLE_ADMIN")
   @PostMapping("/userlist/{username}/reset")
   public Map<String, String> resetUser(@PathVariable("username") String selected_username) {
+    log.info("delete target : {}", selected_username);
     refreshTokenService.resetRefreshToken(selected_username);
     String messege = String.format("user(%s)'s refresh token was reset", selected_username);
     return Map.of(

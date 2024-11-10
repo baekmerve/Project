@@ -31,9 +31,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
  * 로그인 필터
  * @author 연상훈
  * @created 2024-10-06 오후 3:14
- * @updated 2024-10-14 오전 5:52 : 리멤버미 기능 구현을 위해 대폭 수정
- * @updated 2024-10-14 오후 12:08 : 생성자에서 successHandler와 authenticationManager를 입력 받으면서 set 메서드를 사용.
- * 그리고 로그인 성공 시의 로직을 SuccessHandler로 분리
+ * @updated
  * @value userDetailService
  * @value successHandler
  * @value userRepository
@@ -71,15 +69,16 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
    * 사용자 로그인 시 해당 정보를 받아서 인증 토큰에 입력하는 기능.
    * @author 연상훈
    * @created 2024-10-06 오후 5:50
-   * @updated :2024-10-10 오후 5:50
    * @updated 2024-10-17 오후 7:14 : 리멤버미 삭제
    * @info 리액트를 통해 받아오는 request는 request.getParameter 등을 쓸 수 없음.
    * 그래서 귀찮게 일일이 빼오거나 다른 객체로 변환하거나 둘 중 하나이고, 우리는 UserLoginForm 객체 사용함
+   * @info userDetailService.loadUserByUsername에서 user 계정 lock 상태에 따라 잠금된 상태로 반환함. 그렇게 해서 계정 잠금 구현
    */
   @Override
   public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
     log.info("[class] LoginFilter - [method] attemptAuthentication > 시작");
 
+    // get 요청으로 들어오면 거부함
     if(request.getMethod().equalsIgnoreCase("GET")) {
 
       log.info("GET method doesn't supported");
@@ -91,11 +90,16 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     log.info(loginForm);
 
-    UserDetails userDetails = userDetailService.loadUserByUsername(loginForm.getUsername());
+    String username = loginForm.getUsername();
+
+    UserDetails userDetails = userDetailService.loadUserByUsername(username);
     log.info("CustomUserDetails : {}", userDetails);
 
-    request.setAttribute("username", loginForm.getUsername());
-    UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, loginForm.getPassword(), userDetails.getAuthorities());
+    // 로그인 성공/실패 시에도 username값을 가지고 로직을 수행해야 해서 잠시 담아줌.
+    // 성공 시에는 principal에서 받아올 수 있지만, 실패 시에는 아예 없음
+    request.setAttribute("username", username);
+    UsernamePasswordAuthenticationToken authenticationToken =
+            new UsernamePasswordAuthenticationToken(userDetails, loginForm.getPassword(), userDetails.getAuthorities());
     authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
     log.info("[class] LoginFilter - [method] attemptAuthentication > authenticationToken : " + authenticationToken);
@@ -107,11 +111,19 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
    * 로그인 성공 시 실행되는 로직
    * @author 연상훈
    * @created 2024-10-14 오전 6:08
+   * @info 로그인 성공 시 로그인 실패 횟수 초기화하고 잠금 기록 삭제
    */
   @Override
-  protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
-      FilterChain chain, Authentication authResult) throws ServletException, IOException {
+  protected void successfulAuthentication(
+          HttpServletRequest request, 
+          HttpServletResponse response, 
+          FilterChain chain, 
+          Authentication authResult
+  ) throws ServletException, IOException {
+    
     log.info("[class] LoginFilter - [method] successfulAuthentication > 로그인 성공");
+
+    // 솔직히 여기까지 오면 오류 날 리가 없지만 그래도 오류 처리 해줌
     String username = (String)request.getAttribute("username");
     log.info("[class] LoginFilter - [method] successfulAuthentication > username : {}", username);
     if(username == null) {
@@ -135,7 +147,12 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
    * 로그인 실패 시 실행되는 로직
    * @author : 연상훈
    * @created : 2024-10-14 오전 6:09
-   * @info 아직 제대로 구현하진 않았음
+   * @info 계정 잠금으로 인한 로그인 실패 시 메시지만 출력하고 곱게 보내줌
+   * @info 아니면 username 조사 실행
+   * @info - username 조사 결과, 존재하지 않는 username이면, username 틀림 출력 후 보내줌
+   * @info - username 조사 결과, username이 존재한다면, 비밀번호가 틀린 것. 로그인 실패 횟수 조사 실행
+   * @info - 로그인 실패 횟수 조사 결과, 5회 이상 실패했으면 계정을 5분 간 잠금처리하고 실패횟수 초기화
+   * @info - 로그인 실패 횟수 조사 결과, 5회 미만 실패했으면 실패횟수 하나 추가
    */
   @Override
   protected void unsuccessfulAuthentication(HttpServletRequest request,
@@ -197,7 +214,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
    * 요청의 내용을 json 형태로 변환하는 메서드
    * @author : 연상훈
    * @created : 2024-10-06 오후 5:56
-   * @info 책과 달리 UserLoginForm을 사용하기 때문에 데이터를 UserLoginForm 형태에 맞추어 변환하고 반환함.
+   * @info UserLoginForm을 사용하기 때문에 데이터를 UserLoginForm 형태에 맞추어 변환하고 반환함.
    */
   private <T> T parseRequestJSON(HttpServletRequest request, Class<T> classObj) {
     try (Reader reader = new InputStreamReader(request.getInputStream())) {

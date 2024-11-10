@@ -85,7 +85,10 @@ public class CommentServiceImpl implements CommentService {
 
         String owner_username = comment.getUser().getUsername();
 
-        checkCommentOwner(owner_username, logined_username);
+        // 사용자 이름과 작성자 이름이 일치하지 않을 때
+        if (!owner_username.equals(logined_username)) {
+            throw new AccessDeniedException("you are not allowed to access this comment");
+        }
 
         comment.setContent(content);
         commentRepository.save(comment);
@@ -101,7 +104,7 @@ public class CommentServiceImpl implements CommentService {
      * @throws CommentNotFoundException 해당 id를 가진 comment가 존재하지 않음
      */
     @Override
-    public CommentSimpleDTO deleteComment(Integer commentId, String logined_username) {
+    public CommentSimpleDTO deleteComment(Integer commentId, String logined_username, boolean isAdmin) {
         log.info("[class] CommentServiceImpl - [method] deleteComment - commentId : {}", commentId);
 
         Comment comment = commentRepository.findById(commentId)
@@ -109,7 +112,13 @@ public class CommentServiceImpl implements CommentService {
 
         String owner_username = comment.getUser().getUsername();
 
-        checkCommentOwner(owner_username, logined_username);
+        // 사용자 이름과 댓글 작성자 이름이 일치하거나 어드민인가?
+        boolean isQualified = owner_username.equals(logined_username) || isAdmin;
+
+        // 둘 다 아니면 예외 처리
+        if (!isQualified) {
+            throw new AccessDeniedException("you are not allowed to access this comment");
+        }
 
         commentRepository.delete(comment);
 
@@ -158,13 +167,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     /**
-     * MyPage에 들어갈 댓글 목록 조회
+     * MyPage에 들어갈 자기 댓글 목록 조회
      * @param username 어떤 사용자의 댓글 목록을 조회하는 지 파악하는 용도
      * @param pageNum 해당 post에 포함된 다수의 댓글 페이지 중 어느 페이지인지 파악하는 용도
      * @author 연상훈
      * @created 2024-10-27 오후 12:40
      * @info Page<Comment> 형태로 값을 반환함. MyPage에서 자신이 작성한 댓글을 열람하는 기능에 사용됨.
-     * 근데 자기 댓글 조회 기능은 지금 구현되어 있지 않음
+     * @info 근데 사용되진 않음
      */
     @Override
     public CommentListDTO getCommentListByUsername(String username, Integer pageNum) {
@@ -199,6 +208,14 @@ public class CommentServiceImpl implements CommentService {
                 .build();
     }
 
+    /**
+     * 어드민 간편 댓글 메서드
+     * @author 연상훈
+     * @created 2024-11-08 오후 2:53
+     * @info 간단한 답변의 틀을 제공.
+     * @info 고객의 요청 파악에 어려움이 있거나 답변을 어떻게 해야 좋을지 모를 때 AI 답변을 사용하면 chat gpt가 대신 답변해줌
+     * @info 댓글창에 해당 내용이 입력되기 때문에 그것을 바탕으로 수정하면 됨
+     */
     @Override
     public String generateAnswer(Integer postId, String answerType) {
         Post post = postRepository.findById(postId)
@@ -234,6 +251,11 @@ public class CommentServiceImpl implements CommentService {
         return sb.toString();
     }
 
+    /**
+     * comment > commentSimpleDTO 변환 메서드
+     * @author 연상훈
+     * @created 2024-11-08 오후 2:54
+     */
     private CommentSimpleDTO convertCommentToCommentSimpleDTO(Comment comment, String username){
         return CommentSimpleDTO.builder()
                 .commentId(comment.getCommentId())
@@ -258,11 +280,5 @@ public class CommentServiceImpl implements CommentService {
             .stream()
             .map(comment -> convertCommentToCommentSimpleDTO(comment, comment.getUser().getUsername()))
             .toList();
-    }
-
-    private void checkCommentOwner(String owner_username, String logined_username) {
-        if (!owner_username.equals(logined_username)) {
-            throw new AccessDeniedException("you are not allowed to access this comment");
-        }
     }
 }

@@ -1,11 +1,8 @@
 package com.example.actionprice.customerService.post.dto;
 
-import com.example.actionprice.customerService.comment.Comment;
 import com.example.actionprice.customerService.post.Post;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.ToString;
 import org.springframework.data.domain.Page;

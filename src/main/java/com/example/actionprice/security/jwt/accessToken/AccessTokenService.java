@@ -1,7 +1,5 @@
 package com.example.actionprice.security.jwt.accessToken;
 
-import java.util.Map;
-
 public interface AccessTokenService {
   String issueJwt(String username);
   String issueAccessToken(String username);

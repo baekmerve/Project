@@ -50,7 +50,6 @@ public class OriginAuctionDataFetcher {
         this.gson = new Gson();
     }
 
-
     public String getAuctionData_String(String countryCode, String regday, String category_code) throws Exception {
 
         URI uri = composeUri(countryCode, regday, category_code);

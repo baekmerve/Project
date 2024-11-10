@@ -35,6 +35,7 @@ import org.hibernate.annotations.BatchSize;
  * @updated 2024-10-20 오후 12:33 : RefreshTokenEntity 객체와 연결함
  * 중복된 것을 추가하거나 없는 것을 삭제하면 오류가 난다고 알고 있었는데, 다시 조사해 보니 그냥 true/false만 반환함.
  * 그러면 검사 로직이 따로 필요가 없으니 다 빼버림
+ * @updated 2024-11-08 오후 2:41 : 로그인 실패 체크 및 잠금 처리를 위해 필드에 loginFailureCount와 lockedAt 추가
  * @info 1. 순환참조의 문제를 피하기 위해 @ToString(exclude={})와 @JsonManagedReference를 사용했습니다.
  * @info 2. 원활한 하위 객체 관리를 위해 orphanRemoval = true과 cascade = {CascadeType.ALL}를 사용했습니다.
  * @info 3. 객체 호출 시의 효율을 위해 fetch = FetchType.LAZY와 @BatchSize(size)를 사용했습니다.

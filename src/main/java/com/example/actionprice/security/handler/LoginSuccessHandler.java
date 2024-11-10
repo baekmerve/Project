@@ -1,7 +1,6 @@
 package com.example.actionprice.security.handler;
 
 import com.example.actionprice.security.jwt.accessToken.AccessTokenService;
-import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -53,7 +52,8 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     log.info("Login Success Handler : " + jsonStr);
 
-    SecurityContextHolder.getContext().setAuthentication(authentication); // 추가됨
+    // 인증 정보 저장
+    SecurityContextHolder.getContext().setAuthentication(authentication);
     response.setStatus(HttpServletResponse.SC_OK);
     response.getWriter().println(jsonStr); // response(json 형태)의 writer에 토큰 정보 추가
   }

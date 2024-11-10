@@ -1,10 +1,13 @@
 package com.example.actionprice.customerService.comment;
 
 import java.util.Map;
+
+import com.example.actionprice.user.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -101,8 +104,14 @@ public class CommentController {
             @PathVariable("commentId") int commentId
     ) throws IllegalAccessException {
         log.info("[class] CommentController - [method] deleteComment");
+        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        return commentService.deleteComment(commentId, getUsernameWithPrincipal());
+        String loginedUsername = userDetails.getUsername();
+
+        SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name());
+        boolean isAdmin = userDetails.getAuthorities().contains(adminAuthority);
+
+        return commentService.deleteComment(commentId, loginedUsername, isAdmin);
     }
 
     @Secured("ROLE_ADMIN")
@@ -130,7 +139,6 @@ public class CommentController {
     }
 
     private String getUsernameWithPrincipal(){
-        UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userDetails.getUsername();
+        return ((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername();
     }
 }

@@ -293,31 +293,4 @@ public class SendEmailServiceImpl implements SendEmailService {
 		}
 		return code.toString();
 	}
-
-	/**
-	 * @author 연상훈
-	 * @param receiverEmail = 받는 사람의 이메일
-	 * @param subject = 보낼 이메일의 제목
-	 * @param content = 보낼 이메일의 내용
-	 * @created 24/10/01 22:50
-	 * @throws Exception
-	 * @info 간단 이메일 발송 로직. 오류를 대충 처리했음.
-	 * @deprecated
-	 */
-	private void sendMimeMail(String receiverEmail, String subject, String content) throws Exception{
-		MimeMessage message = javaMailSender.createMimeMessage();
-
-		MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(message, false, "UTF-8");
-		mimeMessageHelper.setFrom(senderEmail);
-		mimeMessageHelper.setTo(receiverEmail); // 메일 수신자
-		mimeMessageHelper.setSubject(subject); // 메일 제목
-		mimeMessageHelper.setText(content); // 메일 본문 내용, HTML 여부
-
-		try {
-			javaMailSender.send(message);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 }

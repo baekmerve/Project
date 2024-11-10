@@ -17,11 +17,20 @@ public class HomeServiceImpl implements HomeService {
   // 이미지들을 static에 다 저장하고 경로를 입력해야 함
   // 홈페이지에 반환할 이미지들의 경로
   private final String[] imagePaths = {
-      "static/image/cookie.jpg",
-      "static/image/egg.jpg",
-      "static/image/meat.jpg",
-      "static/image/veggie.jpg",
-      "static/image/salted.jpg",
+          "static/image/crop.jpg",
+          "static/image/fish.jpg",
+          "static/image/fruit.jpg",
+          "static/image/meat.jpg",
+          "static/image/scrop.jpg",
+          "static/image/ve.jpg",
+          "static/image/slide_blue.jpg",
+          "static/image/slide_cherry.jpg",
+          "static/image/slide_chicken.jpg",
+          "static/image/slide_grape.jpg",
+          "static/image/slide_lab.jpg",
+          "static/image/slide_lemon.jpg",
+          "static/image/slide_meat.jpg",
+          "static/image/slide_ve.jpg"
   };
 
   /**

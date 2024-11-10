@@ -9,6 +9,11 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 즐겨찾기 항목 서비스
+ * @author 연상훈
+ * @created 2024-11-08 오후 2:30
+ */
 @Service
 @Transactional
 @Log4j2
@@ -18,6 +23,12 @@ public class FavoriteServiceImpl implements FavoriteService {
   private final FavoriteRepository favoriteRepository;
   private final UserRepository userRepository;
 
+  /**
+   * 즐겨찾기 생성 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오후 2:35
+   * @info 즐겨찾기 항목이 존재하는지는 고려하지 않고 요청 받은 대로 url 구성해서 저장
+   */
   @Override
   public FavoriteSimpleDTO createFavorite(
       String large,
@@ -57,10 +68,13 @@ public class FavoriteServiceImpl implements FavoriteService {
             .favorite_ownerS_username(logined_username)
             .build();
   }
-
-  // 이건 뭔가 더 효율적인 방법이 있을 것 같은데
-  // favorite_name은 중복된 게 있을 수 있어서 이걸로 검색하면 안 됨.
-  // 아니면 favorite id로 검색해야 하는데, 어떻게 될 지 몰라서 지금은 일단 이렇게 함
+  
+  /**
+   * 즐겨찾기 삭제 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오후 2:37
+   * @info 내부적으로 인증 진행. 어드민 or 작성자 본인만 삭제 가능
+   */
   @Override
   public boolean deleteFavorite(Integer favoriteId, String logined_username, boolean isAdmin) {
 
@@ -79,6 +93,13 @@ public class FavoriteServiceImpl implements FavoriteService {
     return false;
   }
 
+  /**
+   * 마이페이지 등에서 즐겨찾기 목록을 반환하는 메서드
+   * @author 연상훈
+   * @created 2024-11-08 오후 2:38
+   * @info 마이페이지 목록이 보안이 필요한 것도 아니고,
+   * 이걸 사용하는 것 자체가 로그인한 사용자 혹은 마이페이지 내부라서 기본적으로 이미 보안이 깔려 있음
+   */
   @Override
   public List<FavoriteSimpleDTO> getFavoriteList(String logined_username) {
     List<Favorite> favorites = favoriteRepository.findByUser_Username(logined_username);

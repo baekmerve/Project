@@ -11,7 +11,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-// return을 responseEntity로 해서 에러 처리도 같이 해버릴까?
 /**
  * 즐겨찾기 컨트롤러
  * @author 연상훈
@@ -21,11 +20,22 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @Log4j2
-@RequestMapping("/api/category") // 상황에 따라 많이 바꿔야 할 수 있음
+@RequestMapping("/api/category")
 public class FavoriteController {
 
   private final FavoriteService favoriteService;
 
+  /**
+   * 즐겨찾기 생성 메서드
+   * @param large 대분류
+   * @param middle 중분류
+   * @param small 소분류
+   * @param rank 품질/등급
+   * @param requestBody favorite_name을 담고 있어야 함
+   * @author 연상훈
+   * @created 2024-11-08 오후 1:00
+   * @info 로그인 한 사용자만 이용 가능
+   */
   @PreAuthorize("isAuthenticated()")
   @PostMapping("/{large}/{middle}/{small}/{rank}/favorite")
   public FavoriteSimpleDTO createFavorite(
@@ -50,6 +60,14 @@ public class FavoriteController {
     );
   }
 
+  /**
+   * 즐겨찾기 삭제 메서드
+   * @param favoriteId
+   * @author 연상훈
+   * @created 2024-11-08 오후 1:03
+   * @info 로그인 한 사용자만 이용 가능
+   * @info 인증은 내부적으로 알아서 진행함
+   */
   @PostMapping("/favorite/{favoriteId}/delete")
   public Map<String, Object> deleteFavorite(@PathVariable("favoriteId") Integer favoriteId){
     log.info("[class] deleteFavorite - [method] deleteFavorite > 실행");

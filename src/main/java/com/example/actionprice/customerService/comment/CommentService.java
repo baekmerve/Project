@@ -1,13 +1,10 @@
 package com.example.actionprice.customerService.comment;
 
-import java.util.List;
-import org.springframework.data.domain.Page;
-
 public interface CommentService {
 
     CommentSimpleDTO createComment(Integer postId, String username, String content);
     CommentSimpleDTO updateComment(Integer commentId, String content, String logined_username);
-    CommentSimpleDTO deleteComment(Integer commentId, String logined_username) throws IllegalAccessException;
+    CommentSimpleDTO deleteComment(Integer commentId, String logined_username, boolean isAdmin) throws IllegalAccessException;
 
     CommentListDTO getCommentListByPostId(Integer postId, Integer pageNum);
     CommentListDTO getCommentListByUsername(String username, Integer pageNum);

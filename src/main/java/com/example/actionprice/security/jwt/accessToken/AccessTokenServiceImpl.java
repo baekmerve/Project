@@ -81,7 +81,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
   }
 
   /**
-   * 리퀘스트 안에서 access token의 값을 읽어서 검사 진행
+   * 리퀘스트 안에서 access token의 값을 읽고 토큰의 내용을 추출함
    * @author 연상훈
    * @created 2024-10-20 오후 4:24
    */
@@ -93,8 +93,7 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     String tokenStr = headerStr.substring(7);
     log.info("tokenType : " + tokenType);
     log.info("tokenStr : " + tokenStr);
-
-
+    
     if(tokenType.equalsIgnoreCase("Bearer") == false){
       // 엑세스 토큰에 Bearer가 빠져 있음. 형식이 이상함
       throw new AccessTokenException(TOKEN_ERROR.BADTYPE);
@@ -107,9 +106,9 @@ public class AccessTokenServiceImpl implements AccessTokenService {
   }
 
   /**
-   * 엑세스 토큰에 대한 모든 검사 진행
+   * 엑세스 토큰을 엄격하게 검사 후 username을 추출함
    * @author 연상훈
-   * @created 2024-10-20 오후 4:24
+   * @created 2024-11-08 오후 12:54
    */
   @Override
   public String validateAccessTokenAndExtractUsername_strictly(String accessToken) {
@@ -134,6 +133,11 @@ public class AccessTokenServiceImpl implements AccessTokenService {
     }
   }
 
+  /**
+   * 엑세스 토큰을 느슨하게 검사 후 username을 추출함
+   * @author 연상훈
+   * @created 2024-11-08 오후 12:54
+   */
   @Override
   public String validateAccessTokenAndExtractUsername_leniently(String accessToken) {
     try {
