@@ -60,8 +60,6 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
         // accessToken을 통해 refreshToken을 간접적으로 검사하기 때문에 엑세스 토큰은 느슨하게, 리프레시 토큰은 엄격하게 검사
         String username = accessTokenService.validateAccessTokenAndExtractUsername_leniently(tokenStr);
         log.info("username : " + username);
-
-        filterChain.doFilter(request, response);
       } catch (ExpiredJwtException e) {
         // 리프레시 토큰의 만료에 대한 검사는 메서드 내부에서 알아서 진행함. 이건 엑세스 토큰 만료에 대한 것
         // 엑세스 토큰 만료 시 재발행. 그 외의 유효성 검사는 모두 진행함
@@ -74,13 +72,16 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
       }
     } catch(RefreshTokenException e){
-      e.sendResponseError(response);
+      request.setAttribute("filter.exception", e);
     } catch(AccessTokenException e){
-      e.sendResponseError(response);
+      request.setAttribute("filter.exception", e);
     } catch (Exception e) {
       log.error("리프레시 토큰 처리 중 오류 발생: {}", e.getMessage());
-      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+      request.setAttribute("filter.exception", e);
     }
+
+    // 뭐가 어찌됐든 필터는 이어줌. 그래야 인터셉터에서 넘겨 받아서 어드바이스로 처리가 됨
+    filterChain.doFilter(request, response);
   }
 
 }

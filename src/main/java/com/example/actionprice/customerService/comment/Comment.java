@@ -50,8 +50,7 @@ public class Comment extends BaseEntity implements Comparable<Comment> {
   @Column(name = "commentId")
   private Integer commentId;
 
-  @Column(nullable = false)
-  @Size(min = 1, max = 300)
+  @Column(nullable = false, length = 300)
   private String content;
 
   // LocalDateTime createdAt | from BaseEntity | auto generation

@@ -43,11 +43,10 @@ public class Favorite implements Comparable<Favorite> {
   @Column(name = "favoriteId")
   private Integer favoriteId;
 
-  @Column(nullable = false)
+  @Column(nullable = false, length = 50)
   private String favoriteName;
 
   @Column(nullable = false)
-  @Size(min = 1)
   private String favoriteURL;
 
   // field - relationship

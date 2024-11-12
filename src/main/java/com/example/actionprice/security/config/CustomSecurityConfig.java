@@ -1,5 +1,6 @@
-package com.example.actionprice.security;
+package com.example.actionprice.security.config;
 
+import com.example.actionprice.security.CustomUserDetailService;
 import com.example.actionprice.security.handler.LoginSuccessHandler;
 import com.example.actionprice.security.filter.LoginFilter;
 import com.example.actionprice.security.filter.RefreshTokenFilter;
@@ -15,6 +16,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,7 +27,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -79,12 +84,13 @@ public class CustomSecurityConfig {
 
       http.sessionManagement(sessionPolicy -> sessionPolicy.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
           .cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource())) // corsConfigurationSource
-          .csrf((csrfconfig) -> csrfconfig.disable()).exceptionHandling(exceptionHandler -> {
+          .csrf((csrfconfig) -> csrfconfig.disable())
+          .exceptionHandling(exceptionHandler -> {
             // accessDeniedHandler가 리다이렉트하지 않도록 만들어서 인증 실패 후 계속 이상한 곳으로 요청 보내지 않도록 함
-              exceptionHandler.accessDeniedHandler(((request, response, accessDeniedException) -> {
-                  response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
-              }));
-              })
+            exceptionHandler.accessDeniedHandler(accessDeniedHandler());
+            // 사용자가 허락되지 않은 경로로 강제 이동 시의 처리를 진행
+            exceptionHandler.authenticationEntryPoint(authenticationEntryPoint());
+          })
           .authorizeHttpRequests((authz) -> authz
                       .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                       .requestMatchers(
@@ -223,5 +229,17 @@ public class CustomSecurityConfig {
       logoutFilter.setFilterProcessesUrl("/api/user/logout");
   
       return logoutFilter;
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler(){
+      return (request, response, accessDeniedException) -> {
+        response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+      };
+    }
+
+    @Bean
+    public AuthenticationEntryPoint authenticationEntryPoint(){
+      return new Http403ForbiddenEntryPoint();
     }
 }

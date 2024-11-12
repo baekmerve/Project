@@ -124,18 +124,33 @@ public class CommentController {
     }
 
     /**
-     * 임시 댓글 리스트
+     * 댓글 리스트 출력
      * @author 연상훈
      * @created 2024-10-29 오전 11:54
-     * @see : 이건 기존 형태에 전혀 맞지 않고, 같은 곳으로 중복된 데이터를 전달하기 때문에 협의 후 수정하거나 삭제하거나 해야 함. 일단 프론트에 맞춰서 만들어 줬을 뿐임
+     * @info 기본적으로 게시글은 전체 공개이지만, 비밀글일 수도 있음
+     * @info 그리고 비밀글의 댓글을 보여준다는 것은 간접적으로 그 비밀글의 내용을 보여주는 것이기도 함
+     * @info 그러니 비밀글의 경우에는 댓글 리스트도 안 보여줘야 함
      */
-    // "/api/post/{postid}/comments"
     @GetMapping("/comments")
     public CommentListDTO getCommentList(
         @RequestParam(name = "postId", defaultValue = "0", required = false) Integer postId,
         @RequestParam(name = "page", defaultValue = "0", required = false) Integer page
     ){
-        return commentService.getCommentListByPostId(postId, page);
+        // 로그인하지 않은 사람도 볼 수는 있도록
+        String logined_username = null;
+        boolean isAdmin = false;
+
+        try {
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            logined_username = userDetails.getUsername();
+            SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()); // 비교대상
+            isAdmin =  userDetails.getAuthorities().contains(adminAuthority);
+        } catch (Exception e) {
+            log.info("로그인 하지 않은 사용자가 게시글에 접근함");
+            log.info(e.getMessage());
+        }
+
+        return commentService.getCommentListByPostId(postId, page, logined_username, isAdmin);
     }
 
     private String getUsernameWithPrincipal(){

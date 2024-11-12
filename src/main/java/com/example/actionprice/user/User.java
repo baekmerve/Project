@@ -57,16 +57,16 @@ public class User {
   // field
 
   // field - basic
+  // 6~20자 제한
   @Id
-  @Column(name = "username")
-  @Size(min = 6, max=20)
+  @Column(name = "username", length = 20)
   private String username;
 
+  // 인코딩해서 들어가기 때문에 길이 제한 걸면 오류 생김
   @Column(nullable=false, name = "password")
   private String password;
 
   @Column(nullable=false, unique=true)
-  @Email
   private String email;
 
   @Column(nullable = false)
@@ -119,7 +119,6 @@ public class User {
       cascade = {CascadeType.ALL},
       fetch = FetchType.LAZY)
   @BatchSize(size = 10)
-  @Size(max = 10)
   @Builder.Default
   private Set<Favorite> favoriteSet = new HashSet<>();
 

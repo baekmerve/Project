@@ -57,12 +57,10 @@ public class Post extends BaseEntity implements Comparable<Post> {
   @Column(name = "postId")
   private Integer postId;
 
-  @Column(nullable=false)
-  @Size(min = 1, max = 30)
+  @Column(nullable=false, length = 30)
   private String title;
 
   @Column(nullable=false, columnDefinition = "TEXT") //columnDefinition Text 로하면 줄바꿈도 되면서 긴 글이 가능
-  @Size(min = 1)
   private String content;
 
   @Column

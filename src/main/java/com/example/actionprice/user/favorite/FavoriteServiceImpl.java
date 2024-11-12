@@ -1,5 +1,6 @@
 package com.example.actionprice.user.favorite;
 
+import com.example.actionprice.exception.TooManyFavoritesException;
 import com.example.actionprice.exception.UserNotFoundException;
 import com.example.actionprice.user.User;
 import com.example.actionprice.user.UserRepository;
@@ -22,6 +23,8 @@ public class FavoriteServiceImpl implements FavoriteService {
 
   private final FavoriteRepository favoriteRepository;
   private final UserRepository userRepository;
+
+  private final int maxFavoriteSize = 10;
 
   /**
    * 즐겨찾기 생성 메서드
@@ -48,6 +51,10 @@ public class FavoriteServiceImpl implements FavoriteService {
             small,
             rank
     );
+
+    if(user.getFavoriteSet().size() >= maxFavoriteSize) {
+      throw new TooManyFavoritesException("max size of favorite : " + maxFavoriteSize);
+    }
 
     Favorite favorite = Favorite.builder()
         .favoriteName(favorite_name)

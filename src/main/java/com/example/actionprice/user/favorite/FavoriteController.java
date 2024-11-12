@@ -47,7 +47,9 @@ public class FavoriteController {
   ){
     log.info("[class] FavoriteController - [method] createFavorite 실행");
 
-    String logined_username = getUsernameWithPrincipal();
+    UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+    String logined_username = userDetails.getUsername();
     String favorite_name = requestBody.get("favorite_name");
 
     return favoriteService.createFavorite(
@@ -68,11 +70,19 @@ public class FavoriteController {
    * @info 로그인 한 사용자만 이용 가능
    * @info 인증은 내부적으로 알아서 진행함
    */
+  @PreAuthorize("isAuthenticated()")
   @PostMapping("/favorite/{favoriteId}/delete")
   public Map<String, Object> deleteFavorite(@PathVariable("favoriteId") Integer favoriteId){
     log.info("[class] deleteFavorite - [method] deleteFavorite > 실행");
 
-    boolean isDeleted = favoriteService.deleteFavorite(favoriteId, getUsernameWithPrincipal(), isLoginedUserAdmin());
+    UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+    String logined_username = userDetails.getUsername();
+
+    SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()); // 비교대상
+    boolean isAdmin = userDetails.getAuthorities().contains(adminAuthority);
+
+    boolean isDeleted = favoriteService.deleteFavorite(favoriteId, logined_username, isAdmin);
 
     if(isDeleted){
       log.info("[class] deleteFavorite - [method] deleteFavorite - 성공");
@@ -82,16 +92,4 @@ public class FavoriteController {
     log.info("[class] deleteFavorite - [method] deleteFavorite - 실패");
     return Map.of("status", "failure", "favoriteId", favoriteId);
   }
-
-  private String getUsernameWithPrincipal(){
-    UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    return userDetails.getUsername();
-  }
-
-  private boolean isLoginedUserAdmin(){
-    UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    SimpleGrantedAuthority adminAuthority = new SimpleGrantedAuthority(UserRole.ROLE_ADMIN.name()); // 비교대상
-    return userDetails.getAuthorities().contains(adminAuthority);
-  }
-
 }

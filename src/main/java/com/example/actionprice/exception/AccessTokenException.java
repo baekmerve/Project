@@ -1,8 +1,6 @@
 package com.example.actionprice.exception;
 
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 
 /**
  * 엑세스 토큰 에러
@@ -10,7 +8,7 @@ import org.springframework.http.MediaType;
  * @created : 2024-10-06 오후 2:57
  * @updated 2024-10-17 오후 7:42 : 상태코드 숫자 수정
  * @updated 2024-10-19 오후 5:17 : 블랙리스트 기능 구현을 위해 TOKEN_ERROR에 BLOCKED 추가
- * @see : 이것의 에러는 e.sendResponseError(response); 이렇게만 처리해줘도 됨
+ * @updated 2024-11-11 오전 5:16 : 불필요한 응답 방식 제거
  */
 public class AccessTokenException extends RuntimeException {
 
@@ -46,16 +44,8 @@ public class AccessTokenException extends RuntimeException {
     this.token_error = error;
   }
 
-  public void sendResponseError(HttpServletResponse response) {
-
-    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-
-    try{
-      response.sendError(token_error.getStatus().value(), token_error.getMessage());
-    }
-    catch(Exception e){
-      throw new RuntimeException(e);
-    }
+  public TOKEN_ERROR getToken_error() {
+    return token_error;
   }
 
 }

@@ -72,20 +72,16 @@ public class TokenCheckFilter extends OncePerRequestFilter {
       // 인증 정보를 저장
       SecurityContextHolder.getContext().setAuthentication(authenticationToken);
       log.info("Security Context : " + SecurityContextHolder.getContext());
-
     } catch(RefreshTokenException e){
-      e.sendResponseError(response);
-      return;
+      request.setAttribute("filter.exception", e);
     } catch(AccessTokenException e){
-      e.sendResponseError(response);
-      return;
+      request.setAttribute("filter.exception", e);
     } catch (Exception e) {
       log.error("TokenCheckFilter 처리 중 예외 발생: {}", e.getMessage());
-      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
-      return;
+      request.setAttribute("filter.exception", e);
     }
 
-    // 뭐가 어찌됐든 필터는 이어줌
+    // 뭐가 어찌됐든 필터는 이어줌. 그래야 인터셉터에서 넘겨 받아서 어드바이스로 처리가 됨
     filterChain.doFilter(request, response);
   }
 

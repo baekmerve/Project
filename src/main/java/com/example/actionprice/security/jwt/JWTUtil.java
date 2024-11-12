@@ -5,7 +5,6 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import java.nio.charset.StandardCharsets;
-import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,15 +41,19 @@ public class JWTUtil {
     headers.put("typ", "JWT");
     headers.put("alg", SIGNATURE_ALGORITHM.getValue());
 
+    Map<String, Object> claims = new HashMap<>();
+    claims.put("username", user.getUsername());
+    claims.put("role", user.getAuthorities());
+
     // setClaims가 무조건 setSubject보다 먼저 와야 함
     return Jwts.builder()
-            .setHeader(headers)
-            .setClaims(Map.of("username", user.getUsername(), "role", user.getAuthorities()))
-            .setSubject(user.getUsername())
-            .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
-            .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(time).toInstant()))
-            .signWith(SIGNATURE_ALGORITHM, secretKey.getBytes(StandardCharsets.UTF_8))
-            .compact();
+        .setHeader(headers)
+        .setClaims(claims)
+        .setSubject(user.getUsername())
+        .setIssuedAt(new Date(System.currentTimeMillis()))
+        .setExpiration(new Date(System.currentTimeMillis() + 1000*60*time))
+        .signWith(SIGNATURE_ALGORITHM, secretKey.getBytes(StandardCharsets.UTF_8))
+        .compact();
   }
 
   /**
@@ -60,12 +63,12 @@ public class JWTUtil {
    * @created : 2024-10-06 오후 2:35
    */
   public String validateToken(String token) throws JwtException {
-    log.info("token : " + token);
     return Jwts.parserBuilder()
         .setSigningKey(secretKey.getBytes(StandardCharsets.UTF_8)) // 설정한 secret key
-        .build() // 아무래도 parseClaimsJws가 이미 객체로서 존재하는 Jwts에 설정하는 거라서 중간에 빌드를 하는 듯?
-        .parseClaimsJws(token) // 파싱 및 검증, 실패 시 에러
-        .getBody() // jwt(json web token)인 만큼 결국 json 형태라서 중요한 내용은 body에 있음
+        .setAllowedClockSkewSeconds(60) // 1분의 오차는 허용
+        .build()
+        .parseClaimsJws(token)
+        .getBody()
         .getSubject();
   }
 

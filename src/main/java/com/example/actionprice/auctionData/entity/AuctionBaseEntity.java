@@ -14,14 +14,15 @@ import java.time.LocalDate;
  * 각 DB에 들어갈 엔티티의 베이스 엔티티
  * @author 연상훈
  * @created 2024-11-08 오후 2:46
+ * @updated 2024-11-10 오후 9:45 : delDate의 set 메서드 추가
  * @info MappedSuperclass와 SuperBuilder로 엔티티 변환이 자유롭도록 함
+ * @info 그래프 객체 때문에 날짜에 대한 delDate의 set 메서드가 반드시 필요
  */
 @MappedSuperclass
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
-@Setter
 @ToString
 public class AuctionBaseEntity{
 
@@ -50,4 +51,8 @@ public class AuctionBaseEntity{
 
     @Column(nullable = true)
     private String del_unit; // 단위(중량 : kg 등)
+
+    public void setDelDate(LocalDate delDate) {
+        this.delDate = delDate;
+    }
 }

@@ -2,6 +2,7 @@ package com.example.actionprice.customerService.post;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class PostForm {
 
     @NotNull(groups = {PostCreateGroup.class, PostUpdateGroup.class})
     @NotBlank(groups = {PostCreateGroup.class, PostUpdateGroup.class})
+    @Size(min = 1, max = 30, groups = {PostCreateGroup.class, PostUpdateGroup.class})
     private String title;
 
     @NotNull(groups = {PostCreateGroup.class, PostUpdateGroup.class})

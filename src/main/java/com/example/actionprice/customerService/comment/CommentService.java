@@ -6,7 +6,7 @@ public interface CommentService {
     CommentSimpleDTO updateComment(Integer commentId, String content, String logined_username);
     CommentSimpleDTO deleteComment(Integer commentId, String logined_username, boolean isAdmin) throws IllegalAccessException;
 
-    CommentListDTO getCommentListByPostId(Integer postId, Integer pageNum);
+    CommentListDTO getCommentListByPostId(Integer postId, Integer pageNum, String logined_username, boolean isAdmin);
     CommentListDTO getCommentListByUsername(String username, Integer pageNum);
 
     String generateAnswer(Integer postId, String answerType);

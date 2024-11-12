@@ -134,7 +134,18 @@ public class CommentServiceImpl implements CommentService {
      * @info Page<Comment> 형태로 값을 반환함. List로 변환하는 등의 작업은 PostSerivce에서 처리
      */
     @Override
-    public CommentListDTO getCommentListByPostId(Integer postId, Integer pageNum) {
+    public CommentListDTO getCommentListByPostId(Integer postId, Integer pageNum, String logined_username, boolean isAdmin) {
+        Post post = postRepository.findById(postId)
+            .orElseThrow(() -> new PostNotFoundException("post(" + postId + ") does not exist"));
+
+        // 게시글이 공개글이 아니고(= 비밀글이고)
+        if (!post.isPublished()) {
+            // 로그인 한 사용자가 게시글의 작성자가 아니면서 어드민도 아니면
+            if(!post.getUser().getUsername().equals(logined_username) && !isAdmin) {
+                throw new AccessDeniedException("you are not allowed to access this comment");
+            }
+        }
+
         Pageable pageable = PageRequest.of(pageNum, 10, Sort.by(Sort.Order.desc("commentId")));
         Page<Comment> commentPage = commentRepository.findByPost_PostId(postId, pageable);
 
